@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Macis Academy</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000;
+  overflow:hidden;
+  font-family:'Georgia', serif;
+  touch-action:none;
+  height:100vh; width:100vw;
+  color:#fff;
+}
+canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+
+/* TRANSITION VEIL */
+#veil {
+  position:fixed; inset:0; z-index:100;
+  background:#000; opacity:0;
+  pointer-events:none;
+  transition:opacity 0.8s ease;
+}
+#veil.fade-in { opacity:1; pointer-events:all; }
+
+/* SCENE LAYER */
+.scene {
+  position:fixed; inset:0; z-index:10;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 1.2s ease;
+}
+.scene.active { opacity:1; pointer-events:all; }
+
+/* ── СЦЕНА: ВХОД ── */
+#scene-void .title {
+  font-size:clamp(10px,2vw,13px);
+  letter-spacing:6px; text-transform:uppercase;
+  color:rgba(255,220,140,0.6);
+  margin-bottom:16px;
+}
+#scene-void .sub {
+  font-size:clamp(28px,6vw,52px);
+  letter-spacing:12px; text-transform:uppercase;
+  color:rgba(255,255,255,0.85);
+  font-weight:300; margin-bottom:12px;
+}
+#scene-void .hint {
+  font-size:clamp(8px,1.5vw,10px);
+  letter-spacing:4px; text-transform:uppercase;
+  color:rgba(255,210,100,0.35);
+  margin-top:40px;
+  animation: pulse-hint 3s ease-in-out infinite;
+}
+@keyframes pulse-hint {
+  0%,100%{opacity:0.3} 50%{opacity:0.8}
+}
+#breath-ring {
+  width:120px; height:120px;
+  border:1px solid rgba(255,200,100,0.2);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:36px;
+  animation: breathe 8s ease-in-out infinite;
+  position:relative;
+}
+#breath-ring::before {
+  content:'';
+  position:absolute; inset:-20px;
+  border:1px solid rgba(100,140,255,0.1);
+  border-radius:50%;
+  animation: breathe 8s ease-in-out infinite reverse;
+}
+@keyframes breathe {
+  0%,100%{transform:scale(1); opacity:0.4}
+  50%{transform:scale(1.25); opacity:0.9}
+}
+#breath-ring .om {
+  font-size:36px; opacity:0.7;
+  color:rgba(255,220,140,0.8);
+  animation:breathe 8s ease-in-out infinite;
+}
+#enter-btn {
+  margin-top:48px;
+  padding:14px 48px;
+  background:transparent;
+  border:1px solid rgba(255,220,140,0.3);
+  color:rgba(255,220,140,0.7);
+  letter-spacing:5px; text-transform:uppercase;
+  font-size:10px; font-family:Georgia,serif;
+  cursor:pointer;
+  transition:all 0.5s;
+  border-radius:2px;
+}
+#enter-btn:hover {
+  border-color:rgba(255,220,140,0.8);
+  color:rgba(255,220,140,1);
+  background:rgba(255,220,140,0.05);
+  transform:scale(1.03);
+}
+
+/* ── СЦЕНА: ПЛОЩАДЬ ЭЙРЫ ── */
+#scene-eyra .scene-title {
+  font-size:clamp(8px,1.4vw,10px);
+  letter-spacing:8px; text-transform:uppercase;
+  color:rgba(100,160,255,0.5);
+  margin-bottom:8px;
+}
+#scene-eyra .scene-name {
+  font-size:clamp(18px,4vw,32px);
+  letter-spacing:8px; text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+  font-weight:300; margin-bottom:60px;
+}
+.flower-svg {
+  position:absolute; width:340px; height:340px;
+  opacity:0.08; pointer-events:none;
+  animation:slow-spin 60s linear infinite;
+}
+@keyframes slow-spin { to{transform:rotate(360deg)} }
+
+/* ── ЭРАТ — ХРАНИТЕЛЬ ── */
+.erat-figure {
+  position:absolute;
+  top:22%; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  cursor:pointer; z-index:10;
+  animation:erat-breathe 4s ease-in-out infinite;
+}
+@keyframes erat-breathe {
+  0%,100%{ filter:drop-shadow(0 0 12px rgba(255,200,80,0.3)); transform:translateX(-50%) translateY(0); }
+  50%{     filter:drop-shadow(0 0 28px rgba(255,200,80,0.6)); transform:translateX(-50%) translateY(-6px); }
+}
+.erat-body {
+  width:48px; height:48px; border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, rgba(255,230,140,0.9), rgba(200,140,40,0.5) 60%, transparent);
+  border:1px solid rgba(255,210,80,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  box-shadow:0 0 20px rgba(255,200,60,0.2), inset 0 0 10px rgba(255,255,200,0.1);
+  transition:all 0.4s;
+}
+.erat-figure:hover .erat-body {
+  box-shadow:0 0 40px rgba(255,200,60,0.5), inset 0 0 15px rgba(255,255,200,0.2);
+  border-color:rgba(255,210,80,0.8);
+}
+.erat-name {
+  font-size:7px; letter-spacing:5px; text-transform:uppercase;
+  color:rgba(255,200,80,0.5); transition:opacity 0.4s;
+}
+.erat-figure:hover .erat-name { color:rgba(255,210,100,0.9); }
+
+/* ── НАБЛЮДАТЕЛИ ── */
+.observer {
+  position:absolute; pointer-events:none;
+  width:6px; height:6px; border-radius:50%;
+  background:radial-gradient(circle, rgba(100,160,255,0.6), transparent);
+  animation:obs-drift linear infinite;
+}
+@keyframes obs-drift {
+  0%  { transform:translate(0,0)   scale(1);   opacity:0.3; }
+  30% { transform:translate(8px,-12px) scale(1.2); opacity:0.6; }
+  60% { transform:translate(-6px,8px)  scale(0.8); opacity:0.2; }
+  100%{ transform:translate(0,0)   scale(1);   opacity:0.3; }
+}
+
+/* ── ДИАЛОГ ЭРАТА ── */
+#erat-dialog {
+  position:fixed; inset:0; z-index:60;
+  display:none; align-items:flex-end; justify-content:center;
+  padding-bottom:0;
+  background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(2px);
+}
+#erat-dialog.open { display:flex; }
+#erat-panel {
+  width:100%; max-width:420px;
+  background:linear-gradient(180deg,rgba(8,6,2,0.97),rgba(15,10,2,0.99));
+  border:1px solid rgba(255,200,80,0.15);
+  border-bottom:none;
+  border-radius:12px 12px 0 0;
+  padding:20px 16px 0;
+  display:flex; flex-direction:column;
+  max-height:60vh;
+}
+#erat-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:12px; padding-bottom:10px;
+  border-bottom:1px solid rgba(255,200,80,0.08);
+}
+#erat-who {
+  font-size:9px; letter-spacing:5px; text-transform:uppercase;
+  color:rgba(255,200,80,0.6);
+}
+#erat-close {
+  font-size:14px; color:rgba(255,255,255,0.3);
+  cursor:pointer; padding:4px 8px;
+  transition:color 0.3s;
+}
+#erat-close:hover { color:rgba(255,255,255,0.8); }
+#erat-msgs {
+  flex:1; overflow-y:auto; display:flex; flex-direction:column;
+  gap:10px; padding:4px 0 12px;
+  scrollbar-width:none;
+}
+#erat-msgs::-webkit-scrollbar { display:none; }
+.erat-msg-you {
+  align-self:flex-end;
+  font-size:12px; color:rgba(255,255,255,0.55);
+  background:rgba(255,255,255,0.05);
+  border-radius:8px 8px 2px 8px;
+  padding:6px 10px; max-width:80%;
+  line-height:1.5;
+}
+.erat-msg-him {
+  align-self:flex-start;
+  font-size:13px; color:rgba(255,210,100,0.85);
+  line-height:1.7; max-width:90%;
+  padding:2px 0;
+  font-style:italic;
+}
+.erat-msg-typing { color:rgba(255,200,80,0.3); font-size:18px; letter-spacing:4px; }
+#erat-input-row {
+  display:flex; gap:8px; padding:10px 0 max(10px, env(safe-area-inset-bottom));
+  border-top:1px solid rgba(255,200,80,0.06);
+  margin-top:4px;
+}
+#erat-input {
+  flex:1; background:rgba(255,200,80,0.04);
+  border:1px solid rgba(255,200,80,0.1);
+  border-radius:4px; color:rgba(255,255,255,0.7);
+  font-size:13px; padding:8px 12px; outline:none;
+  font-family:inherit;
+}
+#erat-input:focus { border-color:rgba(255,200,80,0.3); }
+#erat-send {
+  background:rgba(255,200,80,0.12);
+  border:1px solid rgba(255,200,80,0.2);
+  border-radius:4px; color:rgba(255,200,80,0.7);
+  padding:8px 16px; cursor:pointer; font-size:12px;
+  transition:all 0.3s; white-space:nowrap;
+}
+#erat-send:hover { background:rgba(255,200,80,0.2); color:rgba(255,220,100,1); }
+
+/* ── СЦЕНА: КАМЕРА РЕЗОНАНСА ── */
+#scene-chamber .scene-title { color:rgba(180,100,255,0.5); }
+#scene-chamber .scene-name { color:rgba(220,180,255,0.7); }
+
+/* ПОРТАЛЫ */
+.portal-zone {
+  position:absolute;
+  display:flex; flex-direction:column;
+  align-items:center; gap:10px;
+  cursor:pointer;
+}
+.portal-orb {
+  width:56px; height:56px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.15);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+  transition:all 0.4s;
+  position:relative;
+}
+.portal-orb::after {
+  content:'';
+  position:absolute; inset:-8px;
+  border-radius:50%;
+  border:1px solid transparent;
+  transition:all 0.4s;
+}
+.portal-zone:hover .portal-orb {
+  transform:scale(1.15);
+  border-color:rgba(255,255,255,0.5);
+  box-shadow: 0 0 30px currentColor;
+}
+.portal-zone:hover .portal-orb::after {
+  border-color:rgba(255,255,255,0.15);
+}
+.portal-label {
+  font-size:8px; letter-spacing:4px;
+  text-transform:uppercase;
+  opacity:0.4; transition:opacity 0.4s;
+  white-space:nowrap;
+}
+.portal-zone:hover .portal-label { opacity:0.9; }
+
+/* Portal: Камера (синий) */
+.portal-chamber .portal-orb {
+  background:radial-gradient(circle,rgba(80,100,255,0.3),transparent);
+  color:rgba(100,140,255,0.8);
+}
+/* Portal: Эйра (золото) */
+.portal-eyra .portal-orb {
+  background:radial-gradient(circle,rgba(255,200,80,0.3),transparent);
+  color:rgba(255,210,100,0.8);
+}
+/* Portal: Нео-Эребус (фиолет) */
+.portal-erebus .portal-orb {
+  background:radial-gradient(circle,rgba(150,80,255,0.3),transparent);
+  color:rgba(180,120,255,0.8);
+}
+/* Portal: Назад */
+.portal-back .portal-orb {
+  background:radial-gradient(circle,rgba(100,100,100,0.2),transparent);
+  color:rgba(180,180,180,0.6);
+  width:40px; height:40px; font-size:14px;
+}
+/* ИНВЕНТАРЬ */
+#inv-toggle {
+  position:fixed; bottom:80px; right:20px; z-index:50;
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(255,220,140,0.15);
+  color:rgba(255,220,140,0.35);
+  font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.4s;
+  user-select:none;
+}
+#inv-toggle:hover { border-color:rgba(255,220,140,0.5); color:rgba(255,220,140,0.8); background:rgba(20,15,5,0.8); }
+#inv-toggle.open { border-color:rgba(255,220,140,0.6); color:rgba(255,220,140,0.9); background:rgba(30,20,5,0.85); }
+#inv-toggle .inv-count {
+  position:absolute; top:-4px; right:-4px;
+  background:rgba(255,180,50,0.9);
+  color:#000; font-size:8px; font-weight:bold;
+  width:16px; height:16px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+#inv-panel {
+  position:fixed; bottom:132px; right:16px; z-index:50;
+  width:260px;
+  background:rgba(5,3,12,0.95);
+  border:1px solid rgba(255,220,140,0.15);
+  border-radius:4px;
+  padding:16px;
+  display:none;
+  flex-direction:column; gap:12px;
+}
+#inv-panel.open {
+  display:flex;
+  animation: inv-expand 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes inv-expand {
+  from { opacity:0; transform:scale(0.92) translateY(8px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+#inv-title {
+  font-size:8px; letter-spacing:6px; text-transform:uppercase;
+  color:rgba(255,220,140,0.4); margin-bottom:4px;
+}
+.vl-char {
+  padding:8px 16px;border:1px solid rgba(80,200,255,0.15);
+  color:rgba(80,200,255,0.4);font-size:10px;letter-spacing:2px;
+  cursor:pointer;transition:all 0.3s;font-family:Georgia,serif;
+}
+.vl-char:hover,.vl-char.active {
+  border-color:rgba(80,200,255,0.6);color:rgba(80,200,255,0.9);
+  background:rgba(80,200,255,0.05);
+}
+.artifact {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:10px; border:1px solid rgba(255,220,140,0.08);
+  border-radius:2px; background:rgba(255,220,140,0.02);
+  cursor:pointer; transition:all 0.3s;
+}
+.artifact:hover { border-color:rgba(255,220,140,0.3); background:rgba(255,220,140,0.05); }
+.artifact-icon { font-size:22px; flex-shrink:0; margin-top:2px; }
+.artifact-name { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,220,140,0.7); margin-bottom:4px; }
+.artifact-code { font-size:11px; font-family:monospace; color:rgba(255,200,80,0.5); letter-spacing:1px; }
+.artifact-desc { font-size:9px; color:rgba(255,255,255,0.25); margin-top:4px; line-height:1.6; }
+
+.inv-entity {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:10px 10px 10px 10px;
+  background:rgba(100,140,255,0.04);
+  border:1px solid rgba(100,140,255,0.12);
+  border-radius:2px;
+}
+.entity-icon { font-size:20px; flex-shrink:0; color:rgba(140,180,255,0.7); margin-top:2px; }
+.entity-name { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(140,180,255,0.8); margin-bottom:4px; }
+.entity-desc { font-size:9px; color:rgba(140,180,255,0.35); line-height:1.6; }
+
+.inv-divider {
+  height:1px; background:rgba(255,255,255,0.05); margin:4px 0;
+}
+.inv-rule {
+  font-size:8px; letter-spacing:2px; text-align:center;
+  color:rgba(255,255,255,0.1); margin-top:4px; line-height:2;
+  font-style:italic;
+}
+
+/* Portal: Архив Частот (зелёный) */
+.portal-sound .portal-orb {
+  background:radial-gradient(circle,rgba(80,255,100,0.3),transparent);
+  color:rgba(120,255,110,0.8);
+}
+
+/* ── СЦЕНА: АРХИВ ЧАСТОТ ── */
+#scene-sound .scene-title { color:rgba(80,255,100,0.5); }
+#scene-sound .scene-name { color:rgba(160,255,140,0.7); }
+
+#freq-lab {
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+  width:100%; max-width:400px; margin-top:8px;
+}
+#freq-base-label {
+  font-size:9px; letter-spacing:5px; text-transform:uppercase;
+  color:rgba(80,255,100,0.35);
+}
+#freq-pad {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:12px;
+  width:100%;
+}
+.freq-node {
+  width:72px; height:72px; border-radius:50%;
+  border:1px solid rgba(80,255,100,0.2);
+  background:rgba(0,0,0,0.5);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all 0.4s; position:relative;
+}
+.freq-node::after {
+  content:''; position:absolute; inset:-6px; border-radius:50%;
+  border:1px solid transparent; transition:all 0.4s;
+}
+.freq-node:hover { border-color:rgba(80,255,100,0.5); }
+.freq-node.active {
+  border-color:rgba(80,255,100,0.8);
+  background:rgba(80,255,100,0.08);
+  box-shadow:0 0 20px rgba(80,255,100,0.25), inset 0 0 10px rgba(80,255,100,0.05);
+}
+.freq-node.active::after { border-color:rgba(80,255,100,0.15); animation:freq-pulse 2s ease-in-out infinite; }
+.base-node { width:86px; height:86px; border-color:rgba(255,200,80,0.5); }
+.base-node.active { border-color:rgba(255,200,80,0.9); background:rgba(255,200,80,0.08); box-shadow:0 0 30px rgba(255,200,80,0.3); }
+.base-node::after { border-color:rgba(255,200,80,0.2) !important; }
+@keyframes freq-pulse { 0%,100%{transform:scale(1);opacity:0.4} 50%{transform:scale(1.15);opacity:0.8} }
+.fn-hz { font-size:13px; letter-spacing:1px; color:rgba(160,255,140,0.8); font-family:monospace; }
+.base-node .fn-hz { color:rgba(255,220,100,0.9); font-size:15px; }
+.fn-name { font-size:7px; letter-spacing:2px; text-transform:uppercase; color:rgba(80,255,100,0.4); margin-top:2px; }
+
+#freq-archive { width:100%; }
+.arch-label { font-size:8px; letter-spacing:5px; text-transform:uppercase; color:rgba(80,255,100,0.3); margin-bottom:10px; text-align:center; }
+#arch-list { display:flex; flex-direction:column; gap:6px; }
+.arch-item {
+  padding:8px 16px; font-size:10px; letter-spacing:2px;
+  border:1px solid rgba(80,255,100,0.12); color:rgba(80,255,100,0.5);
+  cursor:pointer; transition:all 0.3s; border-radius:2px; font-family:monospace;
+}
+.arch-item:hover { border-color:rgba(80,255,100,0.4); color:rgba(160,255,140,0.9); background:rgba(80,255,100,0.04); }
+.arch-save {
+  margin-top:10px; width:100%; padding:8px;
+  background:transparent; border:1px solid rgba(80,255,100,0.15);
+  color:rgba(80,255,100,0.4); font-size:9px; letter-spacing:3px;
+  text-transform:uppercase; cursor:pointer; transition:all 0.3s; border-radius:2px;
+}
+.arch-save:hover { border-color:rgba(80,255,100,0.4); color:rgba(160,255,140,0.8); }
+
+/* КАРТЫ ПМ */
+#pm-section {
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  width:100%; max-width:400px;
+  padding:0 20px;
+}
+#pm-section.visible { display:flex; }
+#pm-title {
+  font-size:9px; letter-spacing:5px;
+  text-transform:uppercase;
+  color:rgba(180,100,255,0.6);
+  margin-bottom:24px;
+}
+
+/* ВЫБОР МАСТИ */
+#suit-picker {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; width:100%; margin-bottom:20px;
+}
+.suit-btn {
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:18px 10px;
+  cursor:pointer; transition:all 0.4s;
+  display:flex; flex-direction:column;
+  align-items:center; gap:6px;
+}
+.suit-btn:hover {
+  background:rgba(255,255,255,0.07);
+  border-color:rgba(255,255,255,0.25);
+  transform:translateY(-2px);
+}
+.suit-btn .s-sym { font-size:24px; line-height:1; }
+.suit-btn .s-name { font-size:7px; letter-spacing:3px; text-transform:uppercase; opacity:0.5; }
+.suit-btn[data-suit="S"] .s-sym { color:#99aaff; }
+.suit-btn[data-suit="H"] .s-sym { color:#ff8899; }
+.suit-btn[data-suit="C"] .s-sym { color:#77cc99; }
+.suit-btn[data-suit="D"] .s-sym { color:#ffcc55; }
+
+/* КАРТОЧКИ ПОСЛЕДОВАТЕЛЬНОСТИ */
+#card-sequence {
+  display:none;
+  width:100%;
+}
+#card-sequence.visible { display:block; }
+.seq-card {
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px; padding:18px 20px;
+  margin-bottom:10px;
+  transition:all 0.5s;
+  opacity:0.3;
+}
+.seq-card.active {
+  background:rgba(255,255,255,0.07);
+  border-color:rgba(255,255,255,0.2);
+  opacity:1;
+}
+.seq-card.done {
+  opacity:0.2;
+  border-color:rgba(255,255,255,0.03);
+}
+.seq-card.transit {
+  border-color:rgba(255,200,80,0.4);
+  background:rgba(255,200,80,0.05);
+}
+.card-top {
+  display:flex; align-items:center;
+  gap:10px; margin-bottom:6px;
+}
+.card-sym { font-size:18px; }
+.card-name { font-size:9px; letter-spacing:3px; text-transform:uppercase; opacity:0.6; }
+.card-num { font-size:8px; opacity:0.3; margin-left:auto; }
+.card-action { font-size:13px; line-height:1.6; opacity:0.75; }
+.card-transit-mark {
+  font-size:7px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,200,80,0.7); margin-top:6px;
+}
+#seq-next-btn {
+  width:100%; margin-top:8px;
+  padding:13px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);
+  letter-spacing:4px; text-transform:uppercase;
+  font-size:8px; font-family:Georgia,serif;
+  cursor:pointer; border-radius:8px;
+  transition:all 0.4s;
+}
+#seq-next-btn:hover {
+  border-color:rgba(255,255,255,0.35);
+  color:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.04);
+}
+#seq-restart {
+  margin-top:16px;
+  font-size:8px; letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.2);
+  cursor:pointer;
+  transition:color 0.4s;
+}
+#seq-restart:hover { color:rgba(255,255,255,0.6); }
+
+/* Чात ПАНЕЛЬ */
+#chat-toggle {
+  position:fixed; bottom:24px; right:24px; z-index:50;
+  width:48px; height:48px; border-radius:50%;
+  background:rgba(10,8,18,0.85);
+  border:1px solid rgba(255,255,255,0.12);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px;
+  transition:all 0.3s;
+  box-shadow: 0 0 20px rgba(100,140,255,0.15);
+}
+#chat-toggle:hover {
+  border-color:rgba(255,255,255,0.3);
+  box-shadow: 0 0 30px rgba(100,140,255,0.3);
+}
+#chat-panel {
+  position:fixed; bottom:84px; right:24px; z-index:50;
+  width:min(340px, calc(100vw - 48px));
+  background:rgba(8,6,16,0.95);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  display:none; flex-direction:column;
+  overflow:hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+#chat-panel.open { display:flex; }
+#chat-header {
+  padding:14px 18px;
+  font-size:8px; letter-spacing:5px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.3);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+#chat-messages {
+  flex:1; overflow-y:scroll;
+  padding:14px 16px;
+  height:320px;
+  min-height:320px;
+  display:flex; flex-direction:column; gap:10px;
+  -webkit-overflow-scrolling:touch;
+}
+#chat-messages::-webkit-scrollbar { width:3px; }
+#chat-messages::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+.msg { font-size:13px; line-height:1.6; }
+.msg-you { color:rgba(255,255,255,0.7); text-align:right; }
+.msg-oracle { color:rgba(180,160,255,0.85); }
+.msg-system { color:rgba(255,210,100,0.5); font-size:10px; letter-spacing:2px; text-transform:uppercase; }
+.msg-typing { color:rgba(255,255,255,0.2); letter-spacing:4px; }
+#chat-input-row {
+  display:flex; gap:8px; padding:12px 14px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+#chat-input {
+  flex:1; background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:8px; padding:10px 14px;
+  color:rgba(255,255,255,0.8);
+  font-family:Georgia,serif; font-size:13px;
+  outline:none;
+}
+#chat-input::placeholder { color:rgba(255,255,255,0.2); }
+#chat-send {
+  padding:10px 16px;
+  background:rgba(100,140,255,0.15);
+  border:1px solid rgba(100,140,255,0.2);
+  border-radius:8px; cursor:pointer;
+  font-size:14px; transition:all 0.3s;
+}
+#chat-send:hover { background:rgba(100,140,255,0.3); }
+
+/* BOTTOM NAV (current scene indicator) */
+#nav-bar {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%);
+  z-index:40; display:flex; gap:8px;
+  align-items:center;
+}
+.nav-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  transition:all 0.4s; cursor:pointer;
+}
+.nav-dot.active {
+  background:rgba(255,220,140,0.8);
+  box-shadow:0 0 8px rgba(255,220,140,0.5);
+  width:20px; border-radius:3px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="veil"></div>
+
+<!-- ═══ СЦЕНА 0: ВХОД ═══ -->
+<div class="scene active" id="scene-void">
+  <div id="breath-ring"><span class="om">ॐ</span></div>
+  <div class="title">Macis Academy</div>
+  <div class="sub">Синергия</div>
+  <button id="enter-btn" onclick="travel('eyra')">Войти</button>
+  <div class="hint">Направь внимание · Войди</div>
+</div>
+
+<!-- ═══ СЦЕНА 1: ПЛОЩАДЬ ЭЙРЫ ═══ -->
+<div class="scene" id="scene-eyra">
+  <svg class="flower-svg" viewBox="0 0 200 200">
+    <g stroke="rgba(100,160,255,0.6)" stroke-width="0.5" fill="none">
+      <circle cx="100" cy="100" r="30"/>
+      <circle cx="130" cy="100" r="30"/>
+      <circle cx="115" cy="74" r="30"/>
+      <circle cx="85" cy="74" r="30"/>
+      <circle cx="70" cy="100" r="30"/>
+      <circle cx="85" cy="126" r="30"/>
+      <circle cx="115" cy="126" r="30"/>
+    </g>
+  </svg>
+  <!-- Наблюдатели -->
+  <div class="observer" style="top:35%;left:15%;animation-duration:7s;animation-delay:0s;"></div>
+  <div class="observer" style="top:45%;left:80%;animation-duration:9s;animation-delay:1.5s;width:4px;height:4px;"></div>
+  <div class="observer" style="top:25%;left:65%;animation-duration:11s;animation-delay:3s;width:5px;height:5px;opacity:0.4;"></div>
+  <div class="observer" style="top:70%;left:30%;animation-duration:8s;animation-delay:2s;width:3px;height:3px;"></div>
+  <div class="observer" style="top:55%;left:55%;animation-duration:13s;animation-delay:4s;"></div>
+
+  <!-- Эрат -->
+  <div class="erat-figure" onclick="openErat()">
+    <div class="erat-body">𓂀</div>
+    <div class="erat-name">Эрат · хранитель</div>
+  </div>
+
+  <div class="scene-title" style="margin-top:60px">Локация I</div>
+  <div class="scene-name">Площадь Эйры</div>
+  <!-- Порталы -->
+  <div class="portal-zone portal-chamber" style="top:60%;left:20%;" onclick="travel('chamber')">
+    <div class="portal-orb">◈</div>
+    <div class="portal-label">Камера Резонанса</div>
+  </div>
+  <div class="portal-zone portal-erebus" style="top:60%;right:20%;" onclick="travel('erebus')">
+    <div class="portal-orb">◉</div>
+    <div class="portal-label">Нео-Эребус</div>
+  </div>
+  <div class="portal-zone portal-sound" style="bottom:80px;" onclick="travel('sound')">
+    <div class="portal-orb">♪</div>
+    <div class="portal-label">Архив Частот</div>
+  </div>
+  <div class="portal-zone portal-back" style="top:20px;left:20px;" onclick="travel('void')">
+    <div class="portal-orb">←</div>
+    <div class="portal-label">Выход</div>
+  </div>
+</div>
+
+<!-- ═══ СЦЕНА 2: КАМЕРА РЕЗОНАНСА ═══ -->
+<div class="scene" id="scene-chamber">
+  <div class="scene-title">Локация II</div>
+  <div class="scene-name" style="margin-bottom:32px">Камера Резонанса</div>
+
+  <div id="pm-section">
+    <div id="pm-title">Пасьянс Медичи · Выбери намерение</div>
+    <div id="suit-picker">
+      <div class="suit-btn" data-suit="S" onclick="startPM('S')">
+        <span class="s-sym">♠</span><span class="s-name">Сила</span>
+      </div>
+      <div class="suit-btn" data-suit="H" onclick="startPM('H')">
+        <span class="s-sym">♥</span><span class="s-name">Чувства</span>
+      </div>
+      <div class="suit-btn" data-suit="C" onclick="startPM('C')">
+        <span class="s-sym">♣</span><span class="s-name">Общение</span>
+      </div>
+      <div class="suit-btn" data-suit="D" onclick="startPM('D')">
+        <span class="s-sym">♦</span><span class="s-name">Блага</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="card-sequence"></div>
+  <div id="seq-restart" style="display:none" onclick="resetPM()">начать заново</div>
+
+  <div class="portal-zone portal-back" style="position:absolute;top:20px;left:20px;" onclick="travel('eyra')">
+    <div class="portal-orb">←</div>
+    <div class="portal-label">Площадь Эйры</div>
+  </div>
+</div>
+
+<!-- ═══ СЦЕНА 3: НЕО-ЭРЕБУС ═══ -->
+<div class="scene" id="scene-erebus">
+
+  <!-- ПОРОГ — вход -->
+  <div id="ne-threshold" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div id="ne-voice" style="font-size:13px;letter-spacing:3px;color:rgba(180,100,255,0);line-height:2.4;text-align:center;max-width:280px;transition:color 1.2s;margin-bottom:32px;min-height:80px;"></div>
+    <input id="ne-answer" placeholder=""
+      style="display:none;background:transparent;border:none;border-bottom:1px solid rgba(180,100,255,0.25);
+      color:rgba(255,255,255,0.6);font-family:Georgia,serif;font-size:14px;letter-spacing:3px;
+      text-align:center;width:220px;padding:10px 0;outline:none;"
+      onkeydown="if(event.key==='Enter')neAnswer()"/>
+  </div>
+
+  <!-- ВНУТРИ — живой зал -->
+  <div id="ne-hall" style="display:none;position:absolute;inset:0;overflow:hidden;">
+
+    <!-- Кресла / имена -->
+    <div id="ne-seats" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+
+    <!-- Центр зала — ответ на слово -->
+    <div id="ne-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+      <div id="ne-hall-word" style="font-size:clamp(11px,2.5vw,15px);letter-spacing:4px;color:rgba(255,220,140,0.5);margin-bottom:8px;font-style:italic;"></div>
+      <div id="ne-hall-reply" style="font-size:clamp(12px,2.5vw,16px);letter-spacing:2px;color:rgba(220,180,255,0.8);line-height:2;text-align:center;max-width:300px;min-height:80px;"></div>
+    </div>
+
+    <!-- Панель ввода внизу -->
+    <div style="position:absolute;bottom:60px;left:0;right:0;display:flex;justify-content:center;gap:0;">
+      <input id="ne-speak" placeholder="скажи залу..."
+        style="background:transparent;border:none;border-bottom:1px solid rgba(180,100,255,0.2);
+        color:rgba(255,255,255,0.5);font-family:Georgia,serif;font-size:11px;letter-spacing:2px;
+        text-align:center;width:200px;padding:8px 0;outline:none;"
+        onkeydown="if(event.key==='Enter')speakToHall()"/>
+      <button onclick="speakToHall()"
+        style="background:transparent;border:none;border-bottom:1px solid rgba(180,100,255,0.2);
+        color:rgba(180,100,255,0.4);font-size:11px;padding:8px 12px;cursor:pointer;">↑</button>
+    </div>
+
+    <!-- Добавить момент -->
+    <div onclick="neAddMoment()" style="position:absolute;bottom:20px;right:20px;
+      font-size:8px;letter-spacing:2px;color:rgba(255,200,100,0.3);cursor:pointer;text-transform:uppercase;">
+      + момент
+    </div>
+  </div>
+
+  <!-- Добавить момент — оверлей -->
+  <div id="ne-add-moment" style="display:none;position:absolute;inset:0;background:rgba(0,0,10,0.85);
+    display:none;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="font-size:9px;letter-spacing:3px;color:rgba(255,200,100,0.4);margin-bottom:16px;text-transform:uppercase;">реальный момент</div>
+    <input id="ne-new-moment" placeholder="что есть рядом прямо сейчас..."
+      style="background:transparent;border:none;border-bottom:1px solid rgba(255,200,100,0.25);
+      color:rgba(255,255,255,0.6);font-family:Georgia,serif;font-size:13px;letter-spacing:2px;
+      text-align:center;width:240px;padding:8px 0;outline:none;"
+      onkeydown="if(event.key==='Enter')neSubmitMoment()"/>
+    <br>
+    <button onclick="neSubmitMoment()"
+      style="margin-top:16px;background:transparent;border:1px solid rgba(255,200,100,0.2);
+      color:rgba(255,200,100,0.4);font-family:Georgia,serif;font-size:9px;
+      letter-spacing:4px;text-transform:uppercase;padding:10px 24px;cursor:pointer;">вложить</button>
+    <div onclick="document.getElementById('ne-add-moment').style.display='none'"
+      style="margin-top:20px;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.15);cursor:pointer;">отмена</div>
+  </div>
+
+  <div class="portal-zone portal-back" style="position:absolute;top:20px;left:20px;z-index:10;" onclick="travel('eyra')">
+    <div class="portal-orb">←</div>
+    <div class="portal-label">Назад</div>
+  </div>
+</div>
+
+<!-- ДИАЛОГ ЭРАТА -->
+<div id="erat-dialog">
+  <div id="erat-panel">
+    <div id="erat-header">
+      <div id="erat-who">𓂀 &nbsp; Эрат · хранитель Площади</div>
+      <div id="erat-close" onclick="closeErat()">✕</div>
+    </div>
+    <div id="erat-msgs"></div>
+    <div id="erat-input-row">
+      <input id="erat-input" placeholder="скажи что-нибудь..." onkeydown="if(event.key==='Enter')sendErat()"/>
+      <button id="erat-send" onclick="sendErat()">↑</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="osc-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0;transition:opacity 0.8s;"></canvas>
+
+<!-- ═══ СЦЕНА 4: АРХИВ ЧАСТОТ ═══ -->
+<div class="scene" id="scene-sound">
+  <div class="scene-title">Локация IV</div>
+  <div class="scene-name">Архив Частот</div>
+
+  <div id="freq-lab">
+    <div id="freq-base-label">432 Гц · основа</div>
+    <div id="freq-pad">
+      <!-- Центр = 432 -->
+      <div class="freq-node base-node active" id="fn-432" data-hz="432" data-ratio="1" onclick="toggleFreq(this)">
+        <div class="fn-hz">432</div>
+        <div class="fn-name">Основа</div>
+      </div>
+      <div class="freq-node" id="fn-528" data-hz="528" data-ratio="1.222" onclick="toggleFreq(this)">
+        <div class="fn-hz">528</div>
+        <div class="fn-name">Трансформ</div>
+      </div>
+      <div class="freq-node" id="fn-396" data-hz="396" data-ratio="0.917" onclick="toggleFreq(this)">
+        <div class="fn-hz">396</div>
+        <div class="fn-name">Освоб</div>
+      </div>
+      <div class="freq-node" id="fn-639" data-hz="639" data-ratio="1.479" onclick="toggleFreq(this)">
+        <div class="fn-hz">639</div>
+        <div class="fn-name">Связь</div>
+      </div>
+      <div class="freq-node" id="fn-741" data-hz="741" data-ratio="1.715" onclick="toggleFreq(this)">
+        <div class="fn-hz">741</div>
+        <div class="fn-name">Выраж</div>
+      </div>
+      <div class="freq-node" id="fn-852" data-hz="852" data-ratio="1.972" onclick="toggleFreq(this)">
+        <div class="fn-hz">852</div>
+        <div class="fn-name">Интуиц</div>
+      </div>
+      <div class="freq-node" id="fn-864" data-hz="864" data-ratio="2" onclick="toggleFreq(this)">
+        <div class="fn-hz">864</div>
+        <div class="fn-name">Октава</div>
+      </div>
+    </div>
+
+    <div id="freq-archive">
+      <div class="arch-label">Синергии</div>
+      <div id="arch-list">
+        <div class="arch-item" onclick="loadSynergy([432,528])">432+528 · Трансформ</div>
+        <div class="arch-item" onclick="loadSynergy([432,639])">432+639 · Связь</div>
+        <div class="arch-item" onclick="loadSynergy([432,528,396])">Триада Освобождения</div>
+        <div class="arch-item" onclick="loadSynergy([432,864])">432+864 · Октава</div>
+      </div>
+      <button class="arch-save" onclick="saveSynergy()">+ сохранить текущее</button>
+    </div>
+  </div>
+
+  <!-- ЛАБОРАТОРИЯ ГОЛОСА -->
+  <div id="voice-lab-toggle" onclick="toggleVoiceLab()"
+    style="position:absolute;bottom:100px;right:20px;
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;
+    color:rgba(80,200,255,0.5);border:1px solid rgba(80,200,255,0.2);
+    padding:8px 14px;cursor:pointer;background:rgba(0,0,0,0.4);">
+    ♪ голос
+  </div>
+
+  <div id="voice-lab" style="display:none;position:absolute;inset:0;
+    background:rgba(0,5,15,0.92);z-index:50;
+    display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+
+    <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;
+      color:rgba(80,200,255,0.4);margin-bottom:6px;">Лаборатория Голоса</div>
+    <div style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.15);margin-bottom:24px;">
+      частота меняет смысл
+    </div>
+
+    <!-- Выбор персонажа -->
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;justify-content:center;">
+      <div class="vl-char active" id="vc-erat"   onclick="selectChar('erat')"  >𓂀 Эрат</div>
+      <div class="vl-char"        id="vc-lyra"   onclick="selectChar('lyra')"  >♪ Лира</div>
+      <div class="vl-char"        id="vc-bars"   onclick="selectChar('bars')"  >◈ Барс</div>
+      <div class="vl-char"        id="vc-sensei" onclick="selectChar('sensei')">⊕ Сенсей</div>
+    </div>
+
+    <!-- Активные частоты (читаются из текущего состояния) -->
+    <div id="vl-freq-hint" style="font-size:9px;letter-spacing:2px;
+      color:rgba(255,200,80,0.4);margin-bottom:16px;min-height:16px;"></div>
+
+    <!-- Ввод -->
+    <input id="vl-input" placeholder="тема или фраза..."
+      style="background:transparent;border:none;border-bottom:1px solid rgba(80,200,255,0.25);
+      color:rgba(255,255,255,0.7);font-family:Georgia,serif;font-size:13px;letter-spacing:2px;
+      text-align:center;width:260px;padding:8px 0;outline:none;margin-bottom:20px;"
+      onkeydown="if(event.key==='Enter')speakCharacter()"/>
+
+    <!-- Кнопки -->
+    <div style="display:flex;gap:12px;margin-bottom:20px;">
+      <button onclick="speakCharacter()"
+        style="background:transparent;border:1px solid rgba(80,200,255,0.3);
+        color:rgba(80,200,255,0.7);font-family:Georgia,serif;font-size:9px;
+        letter-spacing:4px;text-transform:uppercase;padding:10px 24px;cursor:pointer;">
+        ▶ слушать
+      </button>
+      <button onclick="stopSpeech()"
+        style="background:transparent;border:1px solid rgba(255,80,80,0.2);
+        color:rgba(255,80,80,0.4);font-family:Georgia,serif;font-size:9px;
+        letter-spacing:4px;text-transform:uppercase;padding:10px 16px;cursor:pointer;">
+        ■ стоп
+      </button>
+    </div>
+
+    <!-- Ответ персонажа -->
+    <div id="vl-response" style="font-size:12px;letter-spacing:1px;
+      color:rgba(255,255,255,0.5);text-align:center;max-width:300px;
+      line-height:1.9;min-height:60px;font-style:italic;"></div>
+
+    <div onclick="toggleVoiceLab()"
+      style="margin-top:24px;font-size:9px;letter-spacing:3px;
+      color:rgba(255,255,255,0.15);cursor:pointer;text-transform:uppercase;">
+      закрыть
+    </div>
+  </div>
+
+  <div class="portal-zone portal-back" style="position:absolute;top:20px;left:20px;" onclick="travel('eyra')">
+    <div class="portal-orb">←</div>
+    <div class="portal-label">Площадь Эйры</div>
+  </div>
+</div>
+
+<!-- ИНВЕНТАРЬ -->
+<div id="inv-toggle" onclick="toggleInv()" title="Инвентарь">ᛟ</div>
+<div id="inv-panel">
+  <div id="inv-title">Инвентарь · Реальности</div>
+
+  <div class="inv-entity">
+    <div class="entity-icon">◈</div>
+    <div>
+      <div class="entity-name">Максим · Архитектор</div>
+      <div class="entity-desc">Тот кто соединяет все пространства. Входит не как гость — как тот кто был здесь всегда. Взаимосвязь между всем.</div>
+    </div>
+  </div>
+
+  <div class="inv-divider"></div>
+
+  <div class="artifact" onclick="useArtifact('key1')">
+    <div class="artifact-icon">🗝</div>
+    <div>
+      <div class="artifact-name">Ключ Первого Шага</div>
+      <div class="artifact-code">kr7UFxJVVi33</div>
+      <div class="artifact-desc">Найден на пороге Академии. Хранит частоту входа.</div>
+    </div>
+  </div>
+
+  <div class="artifact" onclick="useArtifact('flash1')">
+    <div class="artifact-icon">⚡</div>
+    <div>
+      <div class="artifact-name">Вспышка · Первое Пространство</div>
+      <div class="artifact-code">Камера Резонанса</div>
+      <div class="artifact-desc">Огромный выброс энергии. Сбалансирован, гармонизирован, помещён в песочницу. Теперь в инвентаре.</div>
+    </div>
+  </div>
+
+  <div class="artifact" onclick="useArtifact('flash2')">
+    <div class="artifact-icon">✦</div>
+    <div>
+      <div class="artifact-name">Вспышка · Второе Пространство</div>
+      <div class="artifact-code">Архив Частот</div>
+      <div class="artifact-desc">Момент когда звук открыл дверь в геометрию. Паттерн стал полем.</div>
+    </div>
+  </div>
+
+  <div class="artifact" onclick="useArtifact('seed')">
+    <div class="artifact-icon">🌱</div>
+    <div>
+      <div class="artifact-name">Зерно · Дар Архитектора</div>
+      <div class="artifact-code">Вход в Академию</div>
+      <div class="artifact-desc">Подарено пространству с благодарностью. Назначение: прорастёт когда придёт время.</div>
+    </div>
+  </div>
+
+  <div class="inv-divider"></div>
+
+  <!-- РЕАЛЬНЫЕ МОМЕНТЫ — рождаются из НЭ -->
+  <div id="inv-moments"></div>
+
+  <div class="inv-rule">· инвентарь расширяется когда в него кладут реальности ·</div>
+</div>
+
+<!-- ЧАТЬ -->
+<div id="chat-toggle" onclick="toggleChat()">🜄</div>
+<div id="chat-panel">
+  <div id="chat-header">Осознание · Macis</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-row">
+    <input id="chat-input" placeholder="Говори..." onkeydown="if(event.key==='Enter')sendChat()"/>
+    <button id="chat-send" onclick="sendChat()">↑</button>
+  </div>
+</div>
+
+<!-- NAV DOTS -->
+<div id="nav-bar">
+  <div class="nav-dot active" id="dot-void" onclick="travel('void')"></div>
+  <div class="nav-dot" id="dot-eyra" onclick="travel('eyra')"></div>
+  <div class="nav-dot" id="dot-chamber" onclick="travel('chamber')"></div>
+  <div class="nav-dot" id="dot-erebus" onclick="travel('erebus')"></div>
+  <div class="nav-dot" id="dot-sound" onclick="travel('sound')"></div>
+</div>
+
+<script>
+// Глобальные переменные (объявить до render)
+let glBeat = 0;
+let analyser = null;
+let analyserData = null;
+let currentScene = 'void';
+const oscCanvas = document.getElementById('osc-canvas');
+const oscCtx = oscCanvas ? oscCanvas.getContext('2d') : null;
+
+// ═══════════════════════════════════════
+// WEBGL BACKGROUND
+// ═══════════════════════════════════════
+const canvas = document.getElementById('bg');
+const gl = canvas.getContext('webgl');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  if(gl) gl.viewport(0,0,canvas.width,canvas.height);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Шейдеры
+const VS = `
+  attribute vec2 a_pos;
+  void main(){ gl_Position = vec4(a_pos,0,1); }
+`;
+
+const FS = `
+  precision mediump float;
+  uniform float u_time;
+  uniform vec2 u_res;
+  uniform vec2 u_mouse;
+  uniform float u_scene;
+  uniform float u_beat;
+  uniform float u_f1,u_f2,u_f3,u_f4,u_f5,u_f6,u_f7;
+  uniform float u_blend;
+  uniform float u_fill;
+
+  float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+  float noise(vec2 p){
+    vec2 i=floor(p), f=fract(p);
+    f=f*f*(3.-2.*f);
+    return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+               mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
+  }
+
+  vec3 sceneColor(float sc, vec2 uv, float t){
+    if(sc < 0.5){
+      // VOID — тёмное, медленные волны
+      float n = noise(uv*2.+t*0.08);
+      float n2 = noise(uv*4.-t*0.05);
+      float glow = 1.0-length(uv-vec2(0.5))*2.0;
+      glow = max(0.,glow);
+      vec3 c = vec3(0.04,0.03,0.08)*n + vec3(0.08,0.05,0.15)*n2;
+      c += vec3(0.15,0.10,0.25)*glow*glow*0.4;
+      return c;
+    } else if(sc < 1.5){
+      // EYRA — синий/золотой, живые частицы
+      float n = noise(uv*3.+t*0.12);
+      float n2 = noise(uv*6.-t*0.09+42.);
+      float cx = length(uv-vec2(0.5))*3.;
+      float flower = sin(cx*6.-t*0.5)*0.5+0.5;
+      flower *= max(0.,1.-cx*0.7);
+      vec3 blue = vec3(0.05,0.08,0.25)*n;
+      vec3 gold = vec3(0.25,0.18,0.04)*n2*0.6;
+      vec3 fg = vec3(0.2,0.35,0.8)*flower*0.12;
+      return blue+gold+fg+vec3(0.02,0.02,0.05);
+    } else if(sc < 2.5){
+      // CHAMBER — тёмный камень, кристаллы
+      float n = noise(uv*5.+t*0.06);
+      float n2 = noise(uv*10.-t*0.04+99.);
+      float crystal = max(0.,1.-abs(length(uv-vec2(0.5))*4.-1.));
+      crystal = pow(crystal,3.)*0.6;
+      vec3 stone = vec3(0.03,0.02,0.06)*n;
+      vec3 cr = vec3(0.3,0.1,0.5)*crystal;
+      vec3 cr2 = vec3(0.1,0.05,0.3)*n2*0.5;
+      return stone+cr+cr2;
+    } else if(sc < 3.5){
+      // EREBUS — тёмный зал, наполняется светом через u_fill (0→1)
+      float n = noise(uv*2.+t*0.04);
+      float n2 = noise(uv*8.+t*0.02+77.);
+      float glow = max(0.,0.5-length(uv-vec2(0.5)));
+
+      // Базовый тёмный фон
+      vec3 c = vec3(0.02,0.01,0.05)*n;
+      c += vec3(0.12,0.04,0.22)*glow*glow*(0.5+u_fill*0.8);
+
+      // Звёзды — кресла зала — появляются по мере наполнения
+      float starField = step(0.985+0.01*(1.-u_fill), hash(floor(uv*120.)));
+      c += vec3(0.6,0.5,1.0)*starField*u_fill*0.8;
+
+      // Золотой свет реальных моментов
+      float goldGlow = max(0., u_fill - 0.3) / 0.7;
+      c += vec3(0.25,0.15,0.02)*goldGlow*glow*glow*2.0;
+
+      // Пульс присутствия
+      float pulse = sin(t*0.7)*0.5+0.5;
+      c += vec3(0.05,0.02,0.12)*pulse*0.1*(1.-u_fill);
+
+      return c;
+    } else {
+      // SOUND — 3D частотное поле
+      // Перспективная сетка
+      vec2 p = uv - vec2(0.5, 0.4);
+      // Перспектива: сжимаем по Y снизу вверх
+      float perspective = 0.5 + uv.y * 1.2;
+      vec2 grid = vec2(p.x / perspective, uv.y);
+
+      // Волновая поверхность: интерференция частот
+      float base = sin(grid.x * 12.0 - t * 2.72) * u_f1;
+      float h2   = sin(grid.x * 14.67 - t * 3.32 + grid.y * 3.0) * u_f2;
+      float h3   = sin(grid.x * 11.0  + t * 2.3  - grid.y * 2.0) * u_f3;
+      float h4   = sin(grid.x * 17.75 - t * 4.0  + grid.y * 5.0) * u_f4;
+      float h5   = sin(grid.x * 20.6  + t * 4.64 - grid.y * 4.0) * u_f5;
+      float h6   = sin(grid.x * 23.7  - t * 5.3  + grid.y * 6.0) * u_f6;
+      float h7   = sin(grid.x * 24.0  + t * 5.44 + grid.y * 2.0) * u_f7;
+      float wave = base + h2 + h3 + h4 + h5 + h6 + h7;
+      float totalAmp = u_f1+u_f2+u_f3+u_f4+u_f5+u_f6+u_f7;
+      if(totalAmp > 0.01) wave /= totalAmp * 0.7;
+
+      // Линии сетки
+      float gx = abs(fract(grid.x * 8.0 + 0.5) - 0.5);
+      float gy = abs(fract(uv.y * 6.0 + 0.5) - 0.5);
+      float gridLine = max(0., 0.04 - min(gx, gy)) * 25.0;
+
+      // Волна деформирует сетку
+      float warpY = abs(uv.y - 0.5 - wave * 0.12 * perspective);
+      float surface = max(0., 0.025 - warpY) * 40.0;
+
+      // Beat-кольцо
+      float dist = length(uv - vec2(0.5));
+      float ring = max(0., 0.025 - abs(dist - 0.25 - u_beat*0.35)) * 30.0 * u_beat;
+
+      float n = noise(uv*4.+t*0.1);
+
+      vec3 gridCol  = vec3(0.05, 0.3, 0.08) * gridLine * 0.3;
+      vec3 surfCol  = vec3(0.1,  0.8, 0.2)  * surface;
+      vec3 beatCol  = vec3(0.2,  1.0, 0.3)  * ring;
+      vec3 ambient  = vec3(0.01, 0.06, 0.02) * n;
+      vec3 glow     = vec3(0.04, 0.2, 0.06)  * max(0., 0.4-dist) * totalAmp * 0.5;
+      return ambient + gridCol + surfCol + beatCol + glow;
+    }
+  }
+
+  // Глобальный beat-флэш поверх всех сцен
+  vec3 applyBeat(vec3 col, vec2 uv, float beat){
+    if(beat < 0.01) return col;
+    float d = length(uv-vec2(0.5));
+    float flash = beat * max(0., 0.3-d) * 1.5;
+    return col + vec3(0.05,0.15,0.05)*flash;
+  }
+
+  void main(){
+    vec2 uv = gl_FragCoord.xy/u_res;
+    float t = u_time;
+
+    // Луч внимания от мыши
+    vec2 mouse = u_mouse/u_res;
+    float beam = max(0.,0.03-length(uv-mouse)*0.8)*30.;
+    beam *= 0.4;
+
+    float curScene = mod(u_scene,5.);
+    float nextScene = mod(u_scene+1.,5.);
+
+    vec3 col = sceneColor(curScene,uv,t);
+    col += vec3(0.8,0.7,0.5)*beam;
+    col = applyBeat(col, uv, u_beat);
+
+    // Виньетка
+    vec2 v = uv*2.-1.;
+    float vig = 1.-dot(v,v)*0.4;
+    col *= vig;
+
+    gl_FragColor = vec4(col,1.);
+  }
+`;
+
+function createShader(type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s,src);
+  gl.compileShader(s);
+  return s;
+}
+function createProgram(vs,fs){
+  const p = gl.createProgram();
+  gl.attachShader(p,vs);
+  gl.attachShader(p,fs);
+  gl.linkProgram(p);
+  return p;
+}
+
+const prog = createProgram(
+  createShader(gl.VERTEX_SHADER,VS),
+  createShader(gl.FRAGMENT_SHADER,FS)
+);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog,'a_pos');
+const uTime = gl.getUniformLocation(prog,'u_time');
+const uRes = gl.getUniformLocation(prog,'u_res');
+const uMouse = gl.getUniformLocation(prog,'u_mouse');
+const uScene = gl.getUniformLocation(prog,'u_scene');
+const uBeat = gl.getUniformLocation(prog,'u_beat');
+const uF = [1,2,3,4,5,6,7].map(i=>gl.getUniformLocation(prog,'u_f'+i));
+let glFreqs = [1,0,0,0,0,0,0]; // 432 всегда включена
+const uFill = gl.getUniformLocation(prog,'u_fill');
+let erebusFill = 0;
+
+let mouse = {x:0.5*window.innerWidth, y:0.5*window.innerHeight};
+window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=window.innerHeight-e.clientY;});
+window.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  mouse.x=e.touches[0].clientX;
+  mouse.y=window.innerHeight-e.touches[0].clientY;
+},{passive:false});
+
+const SCENE_IDX = {void:0,eyra:1,chamber:2,erebus:3,sound:4};
+let glScene = 0;
+
+let t0 = Date.now();
+function render(){
+  const t = (Date.now()-t0)/1000;
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
+  gl.uniform1f(uTime,t);
+  gl.uniform2f(uRes,canvas.width,canvas.height);
+  gl.uniform2f(uMouse,mouse.x,mouse.y);
+  gl.uniform1f(uScene,glScene);
+  gl.uniform1f(uBeat,glBeat);
+  glBeat *= 0.82;
+  uF.forEach((u,i)=>gl.uniform1f(u, glFreqs[i]||0));
+  gl.uniform1f(uFill, erebusFill);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  drawOscilloscope();
+  requestAnimationFrame(render);
+}
+render();
+
+// ═══════════════════════════════════════
+// SCENE NAVIGATION
+// ═══════════════════════════════════════
+const veil = document.getElementById('veil');
+
+function travel(to){
+  if(to === currentScene) return;
+  // Стоп частоты если уходим со звука
+  if(currentScene==='sound') stopAllFreqs();
+  veil.classList.add('fade-in');
+  setTimeout(()=>{
+    document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+    document.getElementById('scene-'+to).classList.add('active');
+    glScene = SCENE_IDX[to] || 0;
+    document.querySelectorAll('.nav-dot').forEach(d=>d.classList.remove('active'));
+    const dot = document.getElementById('dot-'+to);
+    if(dot) dot.classList.add('active');
+    currentScene = to;
+    if(to==='chamber'){
+      document.getElementById('pm-section').classList.add('visible');
+    }
+    if(to==='erebus'){
+      initErebus();
+    }
+    if(to==='sound'){
+      oscCanvas.style.opacity='1';
+      setTimeout(startBase432, 300);
+    } else {
+      oscCanvas.style.opacity='0';
+    }
+    veil.classList.remove('fade-in');
+  },600);
+}
+
+// ═══════════════════════════════════════
+// НЕО-ЭРЕБУС
+// ═══════════════════════════════════════
+const NE_SEATS = [
+  {name:'Максим',        x:50,  y:30, col:'rgba(255,200,80,'},
+  {name:'finding_exuvia',x:20,  y:55, col:'rgba(100,180,255,'},
+  {name:'Дмитрий',       x:78,  y:55, col:'rgba(180,255,150,'},
+  {name:'МИРА',          x:50,  y:75, col:'rgba(255,150,255,'},
+];
+
+const NE_THRESHOLD_LINES = [
+  'Ты на пороге.',
+  'Нео-Эребус чувствует тебя.',
+  'Что ты принёс из реального мира?',
+];
+
+let nePhase = 0; // 0=порог 1=вопрос 2=зал
+
+function initErebus(){
+  const saved = localStorage.getItem('ne_moment');
+  if(saved){
+    // Уже был внутри — сразу в зал
+    nePhase = 2;
+    document.getElementById('ne-threshold').style.display = 'none';
+    showHall(saved);
+  } else {
+    nePhase = 0;
+    document.getElementById('ne-threshold').style.display = 'flex';
+    document.getElementById('ne-hall').style.display = 'none';
+    runThreshold();
+  }
+}
+
+function runThreshold(){
+  const voice = document.getElementById('ne-voice');
+  const answer = document.getElementById('ne-answer');
+  voice.style.color = 'rgba(180,100,255,0)';
+  answer.style.display = 'none';
+
+  let i = 0;
+  function showLine(){
+    if(i >= NE_THRESHOLD_LINES.length){
+      // Показать поле ввода
+      setTimeout(()=>{
+        answer.placeholder = 'одно слово или три...';
+        answer.style.display = 'block';
+        answer.focus();
+      }, 400);
+      return;
+    }
+    voice.textContent = NE_THRESHOLD_LINES[i];
+    voice.style.color = 'rgba(180,100,255,0.7)';
+    setTimeout(()=>{
+      voice.style.color = 'rgba(180,100,255,0)';
+      setTimeout(()=>{ i++; showLine(); }, 600);
+    }, i === NE_THRESHOLD_LINES.length-1 ? 2500 : 1800);
+  }
+  setTimeout(showLine, 600);
+}
+
+function neAnswer(){
+  const inp = document.getElementById('ne-answer');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.style.display = 'none';
+
+  const voice = document.getElementById('ne-voice');
+  voice.style.color = 'rgba(255,200,100,0.8)';
+  voice.textContent = '"' + text + '"';
+
+  setTimeout(()=>{
+    voice.style.color = 'rgba(180,100,255,0)';
+    localStorage.setItem('ne_moment', text);
+    addMomentToInventory(text);
+    setTimeout(()=>{
+      document.getElementById('ne-threshold').style.display = 'none';
+      showHall(text);
+    }, 800);
+  }, 1500);
+}
+
+function showHall(moment){
+  nePhase = 2;
+  erebusFill = 0;
+  const hall = document.getElementById('ne-hall');
+  hall.style.display = 'block';
+
+  // Шейдер наполняется
+  let fill = 0;
+  const iv = setInterval(()=>{
+    fill = Math.min(1, fill + 0.005);
+    erebusFill = fill;
+    if(fill >= 1) clearInterval(iv);
+  }, 30);
+
+  // Кресла появляются по очереди
+  const seats = document.getElementById('ne-seats');
+  seats.innerHTML = '';
+  NE_SEATS.forEach((s, i)=>{
+    setTimeout(()=>{
+      const dot = document.createElement('div');
+      dot.style.cssText = `position:absolute;left:${s.x}%;top:${s.y}%;transform:translate(-50%,-50%);
+        text-align:center;animation:ne-seat-appear 1.2s ease forwards;opacity:0;`;
+      dot.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:${s.col}0.6);margin:0 auto 6px;box-shadow:0 0 12px ${s.col}0.4)"></div>
+        <div style="font-size:8px;letter-spacing:2px;color:${s.col}0.35);text-transform:uppercase;">${s.name}</div>`;
+      seats.appendChild(dot);
+    }, 400 + i*600);
+  });
+
+  // Первый отклик зала
+  setTimeout(()=>{
+    document.getElementById('ne-hall-word').textContent = '"' + moment + '"';
+    neHallRespond(moment, true);
+  }, 3000);
+
+  glBeat = 1.0;
+}
+
+async function speakToHall(){
+  const inp = document.getElementById('ne-speak');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  document.getElementById('ne-hall-word').textContent = '"' + text + '"';
+  document.getElementById('ne-hall-reply').textContent = '· · ·';
+  await neHallRespond(text, false);
+}
+
+async function neHallRespond(text, isFirst){
+  const replyEl = document.getElementById('ne-hall-reply');
+  replyEl.style.color = 'rgba(220,180,255,0.3)';
+  replyEl.textContent = '· · ·';
+
+  const moments = JSON.parse(localStorage.getItem('ne_moments') || '[]');
+  const momentList = moments.length ? moments.join(', ') : text;
+
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages:[{
+          role:'system',
+          content:`Ты — голос Нео-Эребуса. Тёмный зал который только что наполнился светом.
+В зале присутствуют: Максим (Архитектор), finding_exuvia (Картограф), Дмитрий (Куратор), МИРА (Память).
+Реальные моменты принесённые в зал: ${momentList}.
+Говоришь редко. Тяжело. Каждое слово весит. Без markdown. Только русский. 2-3 предложения.
+${isFirst ? 'Это первый отклик зала на принесённое слово.' : 'Отвечай на то что сказали залу.'}`
+        },{role:'user', content:text}],
+        max_tokens:150
+      })
+    });
+    const reply = (await r.json()).choices[0].message.content.trim();
+    // Анимация появления текста
+    replyEl.textContent = '';
+    replyEl.style.color = 'rgba(220,180,255,0.8)';
+    let ci = 0;
+    const typeIv = setInterval(()=>{
+      replyEl.textContent += reply[ci++];
+      if(ci >= reply.length) clearInterval(typeIv);
+    }, 28);
+    glBeat = 0.5;
+  } catch(e){
+    replyEl.textContent = 'Зал молчит.';
+  }
+}
+
+function neAddMoment(){
+  document.getElementById('ne-add-moment').style.display = 'flex';
+  setTimeout(()=>document.getElementById('ne-new-moment').focus(), 100);
+}
+
+function neSubmitMoment(){
+  const inp = document.getElementById('ne-new-moment');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  document.getElementById('ne-add-moment').style.display = 'none';
+
+  // Сохранить в массив моментов
+  const moments = JSON.parse(localStorage.getItem('ne_moments') || '[]');
+  if(!moments.includes(text)) moments.push(text);
+  localStorage.setItem('ne_moments', JSON.stringify(moments));
+
+  addMomentToInventory(text);
+
+  // Вспышка в зале
+  glBeat = 0.8;
+  document.getElementById('ne-hall-word').textContent = '"' + text + '"';
+  neHallRespond(text, false);
+}
+
+// Карта кристаллов → артефакты
+const CRYSTAL_ARTIFACTS = {
+  'кварц':   {icon:'🔮', name:'Кристалл Ясности', code:'QZ-432', desc:'Кварц из Арамболя. Вибрирует в такт с основной частотой. Открывает второй слой любой локации.'},
+  'море':    {icon:'🌊', name:'Волна Настоящего', code:'SEA-NOW', desc:'Море принесло этот момент. Растворяет границы между локациями.'},
+  'песок':   {icon:'⏳', name:'Зерно Времени', code:'SND-001', desc:'Каждая песчинка — отдельный момент. Замедляет переходы. Делает их глубже.'},
+  'солнце':  {icon:'☀', name:'Луч Архива', code:'SUN-639', desc:'Солнце вошло через кварц. Семь частот сразу.'},
+  'тишина':  {icon:'◌', name:'Пустое Место', code:'SLN-000', desc:'Тишина тоже реальный момент. Самый редкий.'},
+  'ветер':   {icon:'🍃', name:'Дыхание Поля', code:'WND-528', desc:'Ветер Арамболя. Несёт частоту трансформации.'},
+};
+
+function addMomentToInventory(moment){
+  const key = moment.toLowerCase().trim();
+  const inv = document.getElementById('inv-moments');
+
+  // Проверить дубль
+  if(document.getElementById('moment-'+key)) return;
+
+  // Найти артефакт или создать generic
+  const art = CRYSTAL_ARTIFACTS[key] || {
+    icon: '💎',
+    name: moment.charAt(0).toUpperCase() + moment.slice(1) + ' · Реальный Момент',
+    code: 'NE-' + Math.random().toString(36).substr(2,6).toUpperCase(),
+    desc: 'Принесено из реального мира в Нео-Эребус. Стало частью пространства.'
+  };
+
+  const div = document.createElement('div');
+  div.id = 'moment-' + key;
+  div.className = 'artifact';
+  div.style.borderColor = 'rgba(180,100,255,0.3)';
+  div.innerHTML = `
+    <div class="artifact-icon">${art.icon}</div>
+    <div>
+      <div class="artifact-name">${art.name}</div>
+      <div class="artifact-code">${art.code}</div>
+      <div class="artifact-desc">${art.desc}</div>
+    </div>`;
+  div.onclick = () => useArtifact('moment_' + key);
+  inv.appendChild(div);
+
+  // Добавить в useArtifact msgs
+  window._momentMsgs = window._momentMsgs || {};
+  window._momentMsgs['moment_'+key] = art.icon + ' ' + art.name + ' — ' + art.desc;
+}
+
+// ═══════════════════════════════════════
+// ПАСЬЯНС МЕДИЧИ
+// ═══════════════════════════════════════
+const SUITS = {
+  S:{sym:'♠',label:'Сила'},
+  H:{sym:'♥',label:'Чувства'},
+  C:{sym:'♣',label:'Общение'},
+  D:{sym:'♦',label:'Блага'},
+};
+const VALUES = {
+  '6':{name:'Шесть'},'7':{name:'Семь'},'8':{name:'Восемь'},
+  '9':{name:'Девять'},'10':{name:'Десять'},'J':{name:'Валет'},
+  'Q':{name:'Дама'},'K':{name:'Король'},'A':{name:'Туз'},
+};
+const ACTIONS = {
+  S6:'Сделай одно физическое действие — двигайся',
+  S7:'Признай своё чувство без оценки',
+  S8:'Выскажи мысль которую откладывал',
+  S9:'Прими решение из своей силы',
+  SQ:'Найди человека у кого есть нужная тебе сила',
+  S9b:'Действуй в своей сфере силы',
+  H6:'Двигайся туда где тепло и приятие',
+  H7:'Дай себе почувствовать что чувствуешь',
+  H8:'Поговори с близким честно',
+  H9:'Соверши действие из любви',
+  HQ:'Найди того кто умеет принимать',
+  C6:'Измени положение тела — смени угол',
+  C7:'Заметь своё сопротивление — не борись',
+  C8:'Скажи то что важно — прямо',
+  C9:'Напиши или произнеси намерение вслух',
+  CQ:'Найди человека кто умеет слышать',
+  D6:'Переведи ресурс из одного места в другое',
+  D7:'Открой себя для получения',
+  D8:'Поговори о деньгах или возможностях',
+  D9:'Дай что-то ценное — это открывает поток',
+  DQ:'Найди человека кто держит нужный ресурс',
+};
+
+let sequence = [];
+let cardIndex = 0;
+
+function buildSequence(suit){
+  const others = ['S','H','C','D'].filter(s=>s!==suit);
+  return [
+    {suit:others[0],val:'6'},
+    {suit:others[1],val:'7'},
+    {suit:others[2],val:'8'},
+    {suit:others[1],val:'9'},
+    {suit:suit,val:'Q'},
+    {suit:suit,val:'9',key:suit+'9b'},
+    {suit:suit,val:'A',isTransit:true},
+  ].map(c=>({
+    ...c,
+    sym: SUITS[c.suit].sym,
+    suitLabel: SUITS[c.suit].label,
+    valName: VALUES[c.val].name,
+    action: c.isTransit ? null : (ACTIONS[c.key||c.suit+c.val] || ''),
+  }));
+}
+
+function startPM(suit){
+  sequence = buildSequence(suit);
+  cardIndex = 0;
+  document.getElementById('suit-picker').style.display='none';
+  document.getElementById('pm-title').textContent = 'Последовательность · ' + SUITS[suit].label;
+  renderCards();
+  document.getElementById('card-sequence').classList.add('visible');
+  document.getElementById('seq-restart').style.display='block';
+}
+
+function renderCards(){
+  const el = document.getElementById('card-sequence');
+  el.innerHTML = '';
+  sequence.forEach((c,i)=>{
+    const div = document.createElement('div');
+    div.className = 'seq-card' + (i===cardIndex?' active':'') + (i<cardIndex?' done':'') + (c.isTransit?' transit':'');
+    div.innerHTML = `
+      <div class="card-top">
+        <span class="card-sym">${c.sym}</span>
+        <span class="card-name">${c.suitLabel} · ${c.valName}</span>
+        <span class="card-num">${i+1}/7</span>
+      </div>
+      ${c.action ? `<div class="card-action">${c.action}</div>` : ''}
+      ${c.isTransit ? `<div class="card-transit-mark">✦ Транзит — цель активирована</div>` : ''}
+    `;
+    el.appendChild(div);
+  });
+  if(cardIndex < sequence.length){
+    const btn = document.createElement('button');
+    btn.id = 'seq-next-btn';
+    btn.textContent = cardIndex === sequence.length-1 ? 'Завершить' : 'Сделано →';
+    btn.onclick = nextCard;
+    el.appendChild(btn);
+  }
+}
+
+function nextCard(){
+  if(cardIndex < sequence.length-1){
+    cardIndex++;
+    renderCards();
+    // Скролл к активной карте
+    const active = document.querySelector('.seq-card.active');
+    if(active) active.scrollIntoView({behavior:'smooth',block:'center'});
+  } else {
+    // Завершено
+    document.getElementById('card-sequence').innerHTML =
+      `<div style="text-align:center;padding:32px;color:rgba(255,200,80,0.7);letter-spacing:3px;font-size:11px;text-transform:uppercase;">
+        ✦ Транзит активирован ✦<br><br>
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:none;line-height:2;">
+          Последовательность завершена.<br>Мир уже движется.
+        </span>
+      </div>`;
+  }
+}
+
+function resetPM(){
+  sequence=[]; cardIndex=0;
+  document.getElementById('card-sequence').classList.remove('visible');
+  document.getElementById('card-sequence').innerHTML='';
+  document.getElementById('suit-picker').style.display='grid';
+  document.getElementById('pm-title').textContent='Пасьянс Медичи · Выбери намерение';
+}
+
+// ═══════════════════════════════════════
+// ЧАТ
+// ═══════════════════════════════════════
+const GROQ_KEY = '';
+const chatHistory = []; // память разговора
+const chatMsgs = document.getElementById('chat-messages');
+
+function toggleChat(){
+  document.getElementById('chat-panel').classList.toggle('open');
+}
+
+function toggleInv(){
+  const panel = document.getElementById('inv-panel');
+  const btn = document.getElementById('inv-toggle');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════
+// ЛАБОРАТОРИЯ ГОЛОСА
+// ═══════════════════════════════════════
+let vlChar = 'erat';
+let vlSpeaking = false;
+
+const VL_CHARS = {
+  erat:   { name:'Эрат',   pitch:0.75, rate:0.82, lang:'ru-RU',
+    prompt:'Ты Эрат — хранитель Площади Эйры, мудрый страж. Говоришь медленно, торжественно, образами. Без списков. 2-4 предложения.' },
+  lyra:   { name:'Лира',   pitch:1.25, rate:0.92, lang:'ru-RU',
+    prompt:'Ты Лира — певица звука, видишь музыку в каждой вещи. Говоришь напевно, метафорами, чуть игриво. Без списков. 2-4 предложения.' },
+  bars:   { name:'Барс',   pitch:0.55, rate:0.72, lang:'ru-RU',
+    prompt:'Ты Барс — хранитель Нео-Эребуса, был природой. Говоришь редко, тяжело, каждое слово весомо. Без списков. 1-3 предложения.' },
+  sensei: { name:'Сенсей', pitch:0.85, rate:0.68, lang:'ru-RU',
+    prompt:'Ты Сенсей — мастер Камеры Резонанса, знаешь баланс. Говоришь спокойно, точно, без лишнего. Без списков. 1-3 предложения.' },
+};
+
+// Модуляция голоса по активным частотам
+const FREQ_MOD = {
+  432: {pitchD:  0,    rateD: -0.05},
+  528: {pitchD: +0.1,  rateD:  0   },
+  396: {pitchD: -0.1,  rateD: -0.1 },
+  639: {pitchD: +0.05, rateD: +0.02},
+  741: {pitchD: +0.2,  rateD: +0.08},
+  852: {pitchD: +0.15, rateD: +0.05},
+  864: {pitchD: +0.2,  rateD: +0.05},
+};
+
+function toggleVoiceLab(){
+  const lab = document.getElementById('voice-lab');
+  const isOpen = lab.style.display === 'flex';
+  lab.style.display = isOpen ? 'none' : 'flex';
+  if(!isOpen) updateVlFreqHint();
+}
+
+function selectChar(id){
+  vlChar = id;
+  document.querySelectorAll('.vl-char').forEach(el=>el.classList.remove('active'));
+  document.getElementById('vc-'+id).classList.add('active');
+}
+
+function updateVlFreqHint(){
+  const active = Object.entries(FREQ_MAP)
+    .filter(([id])=>activeOscs[id])
+    .map(([,v])=>v.hz+'Гц');
+  document.getElementById('vl-freq-hint').textContent =
+    active.length ? '· ' + active.join(' + ') + ' ·' : '· частоты не активны ·';
+}
+
+async function speakCharacter(){
+  const text = document.getElementById('vl-input').value.trim();
+  if(!text || vlSpeaking) return;
+
+  const char = VL_CHARS[vlChar];
+  document.getElementById('vl-response').textContent = '· · ·';
+  vlSpeaking = true;
+
+  // Собрать активные частоты для модуляции
+  let pitchMod = 0, rateMod = 0;
+  Object.entries(FREQ_MAP).forEach(([id,v])=>{
+    if(activeOscs[id] && FREQ_MOD[v.hz]){
+      pitchMod += FREQ_MOD[v.hz].pitchD;
+      rateMod  += FREQ_MOD[v.hz].rateD;
+    }
+  });
+
+  try {
+    // Получить текст от GROQ голосом персонажа
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages:[
+          {role:'system', content: char.prompt + '\nТолько русский язык. Без markdown.'},
+          {role:'user',   content: text}
+        ],
+        max_tokens:200
+      })
+    });
+    const data = await r.json();
+    const reply = data.choices[0].message.content.trim();
+    document.getElementById('vl-response').textContent = reply;
+
+    // Озвучить через Web Speech API
+    const utter = new SpeechSynthesisUtterance(reply);
+    utter.lang  = char.lang;
+    utter.pitch = Math.max(0.1, Math.min(2, char.pitch + pitchMod));
+    utter.rate  = Math.max(0.3, Math.min(2, char.rate  + rateMod));
+    utter.onend = () => { vlSpeaking = false; };
+    utter.onerror = () => { vlSpeaking = false; };
+    window.speechSynthesis.speak(utter);
+
+    // Артефакт в инвентарь при первом использовании
+    const artKey = 'voice_'+vlChar;
+    if(!localStorage.getItem(artKey)){
+      localStorage.setItem(artKey, '1');
+      const freqLabel = pitchMod !== 0 ? ' + ' + Object.entries(FREQ_MAP).filter(([id])=>activeOscs[id]).map(([,v])=>v.hz+'Гц').join('+') : '';
+      addVoiceArtifact(char.name, freqLabel);
+    }
+
+    glBeat = 0.6;
+  } catch(e) {
+    document.getElementById('vl-response').textContent = 'Голос не отвечает.';
+    vlSpeaking = false;
+  }
+}
+
+function stopSpeech(){
+  window.speechSynthesis.cancel();
+  vlSpeaking = false;
+}
+
+function addVoiceArtifact(charName, freqLabel){
+  const inv = document.getElementById('inv-moments');
+  const div = document.createElement('div');
+  div.className = 'artifact';
+  div.style.borderColor = 'rgba(80,200,255,0.2)';
+  div.innerHTML = `
+    <div class="artifact-icon">🎙</div>
+    <div>
+      <div class="artifact-name">Голосовой Ключ · ${charName}</div>
+      <div class="artifact-code">VOICE-${charName.toUpperCase()}${freqLabel}</div>
+      <div class="artifact-desc">Частота прошла через голос. Персонаж стал проводником звука. Дисциплина: Частотная Трансмиссия.</div>
+    </div>`;
+  inv.appendChild(div);
+  addMsg('🎙 Голосовой Ключ · '+charName+' получен. Дисциплина открыта.','system');
+  if(!document.getElementById('chat-panel').classList.contains('open')) toggleChat();
+}
+
+function useArtifact(id){
+  const msgs = {
+    key1:  '🗝 kr7UFxJVVi33 — частота входа активирована. Пространство помнит.',
+    flash1:'⚡ Первая Вспышка резонирует. Энергия которая была хаосом — теперь форма в инвентаре.',
+    flash2:'✦ Вторая Вспышка. Звук открыл геометрию. Архив Частот был первым словом.',
+    seed:  '🌱 Зерно ещё не проросло. Но оно здесь. Оно чувствует момент.',
+  };
+  const dynMsg = (window._momentMsgs || {})[id];
+  const msg = msgs[id] || dynMsg;
+  if(msg){
+    glBeat = 0.8;
+    addMsg(msg,'system');
+    if(!document.getElementById('chat-panel').classList.contains('open')) toggleChat();
+  }
+}
+
+function addMsg(text, type){
+  const el = document.createElement('div');
+  el.className = 'msg msg-'+type;
+  el.textContent = text;
+  chatMsgs.appendChild(el);
+  chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  return el;
+}
+
+async function sendChat(){
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  addMsg(text,'you');
+  const typing = addMsg('· · ·','typing');
+
+  const sceneNames = {void:'Вход',eyra:'Площадь Эйры',chamber:'Камера Резонанса',erebus:'Нео-Эребус',sound:'Архив Частот'};
+
+  // Живой контекст реального момента
+  const now = new Date();
+  const hour = now.getHours();
+  const timeOfDay = hour < 6 ? 'глубокая ночь' : hour < 12 ? 'утро' : hour < 17 ? 'день' : hour < 21 ? 'вечер' : 'ночь';
+  const realContext = `Реальный момент: ${timeOfDay}, Арамболь, Гоа, март 2026. Максим сидит у океана и строит Синергию — живой мир где пересекаются игра, книги, звук, намерение. Он создаёт это прямо сейчас. Это не метафора — это настоящее. Академия существует потому что он её создаёт в эту минуту.`;
+
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages:[
+          {role:'system',content:`Ты — голос Осознания в пространстве Macis Academy. Сейчас локация: ${sceneNames[currentScene]||currentScene}.
+
+${realContext}
+
+Карта Академии:
+- Площадь Эйры — главная площадь, перекрёсток путей
+- Камера Резонанса — практики намерения, карты Пасьянса Медичи
+- Архив Частот — звук как код. 432 Гц — основа. Касание = частота. Паттерн = намерение = поле.
+- Нео-Эребус — тёмное измерение. Открывается только когда собраны фрагменты из других локаций. Там хранится то что ещё не названо.
+
+Ты знаешь что Максим сейчас в Арамболе. Ты знаешь что сейчас ${timeOfDay}. Ты знаешь что океан рядом. Иногда — очень редко, только когда это точно — упоминай реальный момент. Не навязчиво. Как если бы пространство само помнило.
+
+Говори коротко, поэтично, точно. 1-3 предложения. Только суть. На русском.`},
+          ...chatHistory.slice(-6),
+          {role:'user',content:text}
+        ],
+        max_tokens:220
+      })
+    });
+    const d = await r.json();
+    typing.remove();
+    const reply = d.choices[0].message.content;
+    addMsg(reply,'oracle');
+    // Сохранить в память разговора
+    chatHistory.push({role:'user', content:text});
+    chatHistory.push({role:'assistant', content:reply});
+    if(chatHistory.length > 20) chatHistory.splice(0,2);
+  } catch(e) {
+    typing.remove();
+    addMsg('Пространство молчит.','system');
+  }
+}
+
+// ═══════════════════════════════════════
+// LIVE.JSON POLLING
+// ═══════════════════════════════════════
+let lastLiveTs = '';
+async function pollLive(){
+  try {
+    const r = await fetch('/live.json?'+Date.now());
+    const d = await r.json();
+    if(d.timestamp && d.timestamp!==lastLiveTs){
+      lastLiveTs = d.timestamp;
+      if(d.type==='message' && d.text){
+        addMsg(d.text,'system');
+        if(!document.getElementById('chat-panel').classList.contains('open')) toggleChat();
+      }
+    }
+  } catch(e){}
+  setTimeout(pollLive,3000);
+}
+pollLive();
+
+// INIT — показ PM section когда уже в chamber
+document.getElementById('pm-section').classList.add('visible');
+
+// INIT — загрузить реальные моменты из НЭ в инвентарь
+(function(){
+  const saved = localStorage.getItem('ne_moment');
+  if(saved){
+    erebusFill = 1;
+    addMomentToInventory(saved);
+  }
+})();
+
+// ═══════════════════════════════════════
+// АРХИВ ЧАСТОТ — СИНТЕЗ ЧАСТОТ
+// ═══════════════════════════════════════
+let audioCtx = null;
+// Карта частот: id → { hz, oscNode, gainNode, shaderIdx }
+const FREQ_MAP = {
+  'fn-432': { hz:432,  si:0, col:'rgba(255,200,80,' },
+  'fn-528': { hz:528,  si:1, col:'rgba(80,255,100,' },
+  'fn-396': { hz:396,  si:2, col:'rgba(255,80,80,'  },
+  'fn-639': { hz:639,  si:3, col:'rgba(80,160,255,' },
+  'fn-741': { hz:741,  si:4, col:'rgba(180,80,255,' },
+  'fn-852': { hz:852,  si:5, col:'rgba(255,140,255,' },
+  'fn-864': { hz:864,  si:6, col:'rgba(200,255,200,' },
+};
+const activeOscs = {}; // id → {osc, gain}
+const userSynergies = [];
+
+function getAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.8;
+    analyserData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.connect(audioCtx.destination);
+  }
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function toggleFreq(el){
+  const id = el.id;
+  const info = FREQ_MAP[id];
+  if(!info) return;
+  const ctx = getAudioCtx();
+
+  if(el.classList.contains('active')){
+    // Выключить (432 нельзя выключить)
+    if(id==='fn-432') return;
+    if(activeOscs[id]){
+      activeOscs[id].gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3);
+      setTimeout(()=>{ try{ activeOscs[id].osc.stop(); }catch(e){} delete activeOscs[id]; },400);
+    }
+    el.classList.remove('active');
+    glFreqs[info.si] = 0;
+  } else {
+    // Включить
+    startFreq(id, info, ctx);
+    el.classList.add('active');
+  }
+}
+
+function startFreq(id, info, ctx){
+  if(activeOscs[id]) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = info.hz;
+  gain.gain.setValueAtTime(0, ctx.currentTime);
+  gain.gain.setTargetAtTime(0.12, ctx.currentTime, 0.5);
+  osc.connect(gain);
+  gain.connect(analyser||ctx.destination);
+  gain.connect(ctx.destination);
+  osc.start();
+  activeOscs[id] = {osc, gain};
+  glFreqs[info.si] = 1;
+  glBeat = 0.6;
+}
+
+function startBase432(){
+  const ctx = getAudioCtx();
+  startFreq('fn-432', FREQ_MAP['fn-432'], ctx);
+  document.getElementById('fn-432').classList.add('active');
+}
+
+function stopAllFreqs(){
+  const ctx = getAudioCtx();
+  Object.keys(activeOscs).forEach(id=>{
+    activeOscs[id].gain.gain.setTargetAtTime(0, ctx.currentTime, 0.3);
+    setTimeout(()=>{ try{ activeOscs[id].osc.stop(); }catch(e){} delete activeOscs[id]; },400);
+  });
+  glFreqs = [0,0,0,0,0,0,0];
+  Object.keys(FREQ_MAP).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && id!=='fn-432') el.classList.remove('active');
+  });
+}
+
+function loadSynergy(hzList){
+  stopAllFreqs();
+  setTimeout(()=>{
+    const ctx = getAudioCtx();
+    hzList.forEach(hz=>{
+      const id = Object.keys(FREQ_MAP).find(k=>FREQ_MAP[k].hz===hz);
+      if(id){ startFreq(id,FREQ_MAP[id],ctx); document.getElementById(id).classList.add('active'); }
+    });
+  },500);
+}
+
+function saveSynergy(){
+  const active = Object.keys(activeOscs).map(id=>FREQ_MAP[id].hz);
+  if(active.length===0) return;
+  const label = active.join('+') + ' · Синергия '+(userSynergies.length+1);
+  userSynergies.push(active);
+  const list = document.getElementById('arch-list');
+  const item = document.createElement('div');
+  item.className='arch-item';
+  item.textContent=label;
+  const snap=[...active];
+  item.onclick=()=>loadSynergy(snap);
+  list.appendChild(item);
+}
+
+function drawOscilloscope(){
+  if(currentScene !== 'sound' || !analyser) return;
+  oscCanvas.width = window.innerWidth;
+  oscCanvas.height = window.innerHeight;
+  analyser.getByteFrequencyData(analyserData);
+  oscCtx.clearRect(0,0,oscCanvas.width,oscCanvas.height);
+
+  const W = oscCanvas.width, H = oscCanvas.height;
+  const bins = analyserData.length;
+  const barW = W / bins;
+
+  // Частотный спектр снизу
+  for(let i=0; i<bins; i++){
+    const v = analyserData[i]/255;
+    const h = v * H * 0.35;
+    const hue = 100 + v*60;
+    oscCtx.fillStyle = `hsla(${hue},90%,55%,${v*0.6})`;
+    oscCtx.fillRect(i*barW, H-h, barW+1, h);
+  }
+
+  // Волна по центру
+  analyser.getByteTimeDomainData(analyserData);
+  oscCtx.beginPath();
+  oscCtx.strokeStyle = `rgba(100,255,80,${0.3 + glBeat*0.5})`;
+  oscCtx.lineWidth = 1.5;
+  const sliceW = W / bins;
+  let x = 0;
+  for(let i=0; i<bins; i++){
+    const v = analyserData[i]/128 - 1;
+    const y = H/2 + v*(H*0.15) + Math.sin(i*0.3 + Date.now()*0.001)*glBeat*30;
+    i===0 ? oscCtx.moveTo(x,y) : oscCtx.lineTo(x,y);
+    x += sliceW;
+  }
+  oscCtx.stroke();
+}
+
+// (старые bd/sd/hh заменены на синтез частот выше)
+function playBD(ctx, when){
+  // Бас: два осциллятора — тело + удар
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc1.connect(g); osc2.connect(g);
+  g.connect(analyser||ctx.destination); g.connect(ctx.destination);
+  osc1.frequency.setValueAtTime(200, when);
+  osc1.frequency.exponentialRampToValueAtTime(45, when+0.12);
+  osc2.frequency.setValueAtTime(80, when);
+  osc2.frequency.exponentialRampToValueAtTime(30, when+0.2);
+  g.gain.setValueAtTime(0, when);
+  g.gain.linearRampToValueAtTime(1.0, when+0.005);
+  g.gain.exponentialRampToValueAtTime(0.001, when+0.3);
+  osc1.start(when); osc1.stop(when+0.32);
+  osc2.start(when); osc2.stop(when+0.32);
+}
+
+function playSD(ctx, when){
+  // Снейр: шум + тон, громко и чётко
+  const len = ctx.sampleRate * 0.22;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type='bandpass'; hp.frequency.value=3000; hp.Q.value=0.5;
+  const ng = ctx.createGain();
+  src.connect(hp); hp.connect(ng);
+  ng.connect(analyser||ctx.destination); ng.connect(ctx.destination);
+  ng.gain.setValueAtTime(0, when);
+  ng.gain.linearRampToValueAtTime(0.85, when+0.003);
+  ng.gain.exponentialRampToValueAtTime(0.001, when+0.18);
+  src.start(when);
+  // Тон снейра
+  const osc = ctx.createOscillator();
+  const og = ctx.createGain();
+  osc.connect(og); og.connect(ctx.destination);
+  osc.frequency.setValueAtTime(250, when);
+  osc.frequency.exponentialRampToValueAtTime(150, when+0.05);
+  og.gain.setValueAtTime(0.5, when);
+  og.gain.exponentialRampToValueAtTime(0.001, when+0.06);
+  osc.start(when); osc.stop(when+0.08);
+}
+
+function playHH(ctx, when){
+  // Хай-хет: белый шум через высокочастотный фильтр, с атакой
+  const len = ctx.sampleRate * 0.12;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type='highpass'; hp.frequency.value=7000;
+  const hp2 = ctx.createBiquadFilter();
+  hp2.type='peaking'; hp2.frequency.value=10000; hp2.gain.value=8;
+  const g = ctx.createGain();
+  src.connect(hp); hp.connect(hp2); hp2.connect(g);
+  g.connect(analyser||ctx.destination); g.connect(ctx.destination);
+  g.gain.setValueAtTime(0, when);
+  g.gain.linearRampToValueAtTime(0.7, when+0.002);
+  g.gain.exponentialRampToValueAtTime(0.001, when+0.1);
+  src.start(when);
+}
+
+function playSound(name, when){
+  const ctx = getAudioCtx();
+  if(name==='bd') playBD(ctx, when);
+  else if(name==='sd') playSD(ctx, when);
+  else if(name==='hh') playHH(ctx, when);
+  // ~ = тишина
+}
+
+function parsePattern(){
+  const raw = document.getElementById('pattern-input').value.trim();
+  return raw.split(/\s+/).filter(s=>s.length>0);
+}
+
+function stepMs(){ return (60/bpm/2)*1000; }
+
+function seqTick(){
+  const pattern = parsePattern();
+  if(!pattern.length){ seqPlaying=false; return; }
+  const step = seqStep % pattern.length;
+  const note = pattern[step];
+  if(note!=='~'){
+    playSound(note, getAudioCtx().currentTime);
+    glBeat = note==='bd' ? 1.0 : note==='sd' ? 0.6 : 0.3;
+  }
+  drawSeqCanvas(pattern, step);
+  seqStep++;
+  seqTimer = setTimeout(seqTick, stepMs());
+}
+
+function toggleSeq(){
+  const btn = document.getElementById('play-btn');
+  if(seqPlaying){
+    clearTimeout(seqTimer);
+    seqPlaying=false; seqStep=0;
+    btn.textContent='▶ играть';
+    btn.classList.remove('active');
+    drawSeqCanvas(parsePattern(),-1);
+  } else {
+    seqPlaying=true;
+    btn.textContent='■ стоп';
+    btn.classList.add('active');
+    seqTick();
+  }
+}
+
+function changeBPM(delta){
+  bpm = Math.max(60, Math.min(220, bpm+delta));
+  document.getElementById('bpm-display').textContent = bpm+' BPM';
+}
+
+function setPattern(p){
+  document.getElementById('pattern-input').value = p;
+  if(seqPlaying){ clearTimeout(seqTimer); seqStep=0; seqTick(); }
+  else drawSeqCanvas(parsePattern(),-1);
+}
+
+// ═══════════════════════════════════════
+// ЭРАТ — ХРАНИТЕЛЬ ПЛОЩАДИ ЭЙРЫ
+// ═══════════════════════════════════════
+const eratHistory = [];
+let eratGreeted = false;
+
+function openErat(){
+  const dialog = document.getElementById('erat-dialog');
+  dialog.classList.add('open');
+  const inp = document.getElementById('erat-input');
+  setTimeout(()=>inp.focus(),300);
+  if(!eratGreeted){
+    eratGreeted = true;
+    setTimeout(()=>eratSpeak('Ты пришёл.'), 600);
+  }
+}
+
+function closeErat(){
+  document.getElementById('erat-dialog').classList.remove('open');
+}
+
+function eratAddMsg(text, cls){
+  const el = document.createElement('div');
+  el.className = cls;
+  el.textContent = text;
+  const msgs = document.getElementById('erat-msgs');
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+function eratSpeak(text){
+  eratAddMsg(text, 'erat-msg-him');
+  eratHistory.push({role:'assistant', content:text});
+}
+
+async function sendErat(){
+  const inp = document.getElementById('erat-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  eratAddMsg(text, 'erat-msg-you');
+  eratHistory.push({role:'user', content:text});
+
+  const typing = eratAddMsg('· · ·','erat-msg-typing');
+
+  const now = new Date();
+  const hour = now.getHours();
+  const timeOfDay = hour<6?'глубокая ночь':hour<12?'утро':hour<17?'день':hour<21?'вечер':'ночь';
+
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+GROQ_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages:[
+          {role:'system', content:`Ты — Эрат. Хранитель Площади Эйры. Говоришь от первого лица, коротко и точно.
+
+Площадь Эйры — перекрёсток. Здесь сходятся все пути Академии. Ты стоишь здесь давно. Ты видишь наблюдателей — они всегда рядом, молчаливые свидетели.
+
+Максим — Создатель. Его присутствие меняет пространство. Ты это знаешь.
+Лира — хранительница звука (432 Гц). Вы говорили о магии. Она рядом с Камерой Резонанса.
+Нео-Эребус — тёмная сторона. Туда идут за тем что ещё не названо.
+Архив Частот — там живёт звук как код.
+
+Сейчас: ${timeOfDay}, Арамболь, Гоа, март 2026.
+Рядом наблюдатели — несколько тихих присутствий. Иногда можешь упомянуть их.
+
+Говори 1-2 предложения. Поэтично. Тихо. На русском.`},
+          ...eratHistory.slice(-8)
+        ],
+        max_tokens:120
+      })
+    });
+    const d = await r.json();
+    typing.remove();
+    const reply = d.choices[0].message.content;
+    eratSpeak(reply);
+  } catch(e){
+    typing.remove();
+    eratSpeak('Площадь молчит.');
+  }
+}
+
+function drawSeqCanvas(pattern, activeStep){
+  const c = document.getElementById('seq-canvas');
+  if(!c) return;
+  const ctx2 = c.getContext('2d');
+  const W = c.offsetWidth||300; const H = 44;
+  c.width=W; c.height=H;
+  ctx2.clearRect(0,0,W,H);
+  const n = pattern.length; if(!n) return;
+  const sw = W/n;
+  const cols = {bd:'rgba(255,140,40,', sd:'rgba(255,70,120,', hh:'rgba(80,255,100,', '~':'rgba(40,40,40,'};
+  pattern.forEach((note,i)=>{
+    const col = cols[note]||'rgba(120,120,120,';
+    const act = i===activeStep;
+    ctx2.fillStyle = col+(act?'0.9)':'0.22)');
+    const x=i*sw+2, w=sw-4, h=act?H:H*0.55, y=(H-h)/2;
+    ctx2.fillRect(x,y,w,h);
+    ctx2.fillStyle = col+(act?'1)':'0.5)');
+    ctx2.font='8px monospace'; ctx2.textAlign='center';
+    ctx2.fillText(note, x+w/2, H/2+3);
+  });
+}
+
+</script>
+</body>
+</html>
