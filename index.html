@@ -651,6 +651,178 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
   box-shadow:0 0 8px rgba(255,220,140,0.5);
   width:20px; border-radius:3px;
 }
+
+/* ══════════════════════════════
+   КАРТА АКАДЕМИИ — сцена 5
+══════════════════════════════ */
+#scene-map {
+  display:grid !important;
+  grid-template-columns:1fr clamp(76px,13vw,116px) 1fr;
+  grid-template-rows:1fr auto 1fr;
+  gap:10px;
+  padding:56px 10px 76px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  align-items:center;
+  justify-items:center;
+}
+#map-svg-layer {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none; z-index:1; overflow:visible;
+}
+#map-svg-layer path {
+  stroke-dasharray:3 9;
+  animation:dash-flow 4s linear infinite;
+}
+@keyframes dash-flow { to { stroke-dashoffset:-60; } }
+
+.map-section {
+  width:clamp(128px,30vw,216px);
+  padding:14px 12px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:rgba(0,0,0,0.32);
+  border-radius:6px; z-index:3;
+  position:relative; backdrop-filter:blur(6px);
+  transition:border-color 0.4s;
+}
+.map-section:hover { border-color:rgba(255,255,255,0.13); }
+.ms-header {
+  font-size:7px; letter-spacing:4px; text-transform:uppercase;
+  margin-bottom:10px; display:flex; align-items:center; gap:6px;
+  padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.ms-item {
+  font-size:9px; letter-spacing:1px;
+  color:rgba(255,255,255,0.38);
+  padding:5px 6px 5px 14px;
+  cursor:pointer; border-radius:2px;
+  transition:all 0.3s; position:relative; line-height:1.4;
+}
+.ms-item::before { content:'·'; position:absolute; left:4px; opacity:0.25; }
+.ms-item:hover { color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.04); }
+.ms-item:hover::before { opacity:0.9; }
+
+.ms-tl { grid-column:1; grid-row:1; justify-self:end; align-self:end; }
+.ms-tr { grid-column:3; grid-row:1; justify-self:start; align-self:end; }
+.ms-bl { grid-column:1; grid-row:3; justify-self:end; align-self:start; }
+.ms-br { grid-column:3; grid-row:3; justify-self:start; align-self:start; }
+
+#map-center-node {
+  grid-column:2; grid-row:2;
+  display:flex; flex-direction:column; align-items:center; z-index:3;
+}
+#map-center-ring {
+  width:clamp(70px,12vw,106px); height:clamp(70px,12vw,106px);
+  border-radius:50%;
+  border:1px solid rgba(255,200,80,0.32);
+  background:radial-gradient(circle at 40% 35%, rgba(255,200,80,0.09), transparent 70%);
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(22px,4.5vw,34px); color:rgba(255,200,80,0.65);
+  animation:breathe 6s ease-in-out infinite;
+  box-shadow:0 0 40px rgba(255,200,80,0.06);
+  position:relative;
+}
+#map-center-ring::before {
+  content:''; position:absolute; inset:-10px; border-radius:50%;
+  border:1px solid rgba(255,200,80,0.07);
+  animation:breathe 6s ease-in-out infinite reverse;
+}
+#map-center-ring::after {
+  content:''; position:absolute; inset:-22px; border-radius:50%;
+  border:1px solid rgba(255,200,80,0.03);
+  animation:breathe 6s ease-in-out infinite; animation-delay:1.5s;
+}
+#map-center-label {
+  font-size:clamp(6px,1.3vw,8px); letter-spacing:5px; text-transform:uppercase;
+  color:rgba(255,200,80,0.4); margin-top:9px;
+}
+#map-center-sub {
+  font-size:7px; letter-spacing:2px; color:rgba(255,255,255,0.1); margin-top:3px;
+}
+
+.ms-add {
+  margin-top:8px; font-size:8px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(80,255,100,0.25); cursor:pointer; padding:6px 0;
+  transition:color 0.3s; text-align:center;
+  border-top:1px solid rgba(80,255,100,0.06);
+}
+.ms-add:hover { color:rgba(80,255,100,0.7); }
+
+/* Детальная панель карты */
+#map-detail {
+  position:fixed; inset:0; z-index:70;
+  display:flex; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,0.5); backdrop-filter:blur(3px);
+  pointer-events:none; opacity:0; transition:opacity 0.3s;
+}
+#map-detail.open { opacity:1; pointer-events:all; }
+#map-detail-panel {
+  width:100%; max-width:440px;
+  background:linear-gradient(180deg,rgba(8,6,14,0.98),rgba(12,8,22,0.99));
+  border:1px solid rgba(255,255,255,0.07); border-bottom:none;
+  border-radius:14px 14px 0 0;
+  padding:24px 20px max(24px,env(safe-area-inset-bottom));
+  max-height:62vh; overflow-y:auto; position:relative;
+  animation:inv-expand 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.map-d-close {
+  position:absolute; top:16px; right:20px;
+  font-size:14px; color:rgba(255,255,255,0.22);
+  cursor:pointer; padding:4px 8px; transition:color 0.3s;
+}
+.map-d-close:hover { color:rgba(255,255,255,0.7); }
+#map-detail-icon { font-size:26px; margin-bottom:6px; }
+#map-detail-name { font-size:13px; letter-spacing:4px; text-transform:uppercase; margin-bottom:3px; }
+#map-detail-role { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.22); margin-bottom:14px; }
+#map-detail-desc { font-size:13px; line-height:1.9; color:rgba(255,255,255,0.55); margin-bottom:18px; }
+#map-detail-action {
+  width:100%; padding:11px; background:transparent;
+  border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45);
+  font-size:8px; letter-spacing:4px; text-transform:uppercase;
+  cursor:pointer; border-radius:6px; transition:all 0.35s;
+  font-family:Georgia,serif; display:none;
+}
+#map-detail-action:hover { border-color:rgba(255,255,255,0.35); color:rgba(255,255,255,0.85); }
+
+/* Модал добавления идеи */
+#map-add-modal {
+  display:none; position:fixed; inset:0; z-index:80;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,8,0.75); backdrop-filter:blur(4px);
+}
+#map-add-modal.open { display:flex; }
+#map-add-box {
+  background:rgba(5,3,14,0.97); border:1px solid rgba(80,255,100,0.15);
+  border-radius:12px; padding:28px 24px;
+  width:min(320px,calc(100vw - 32px));
+}
+#map-add-title { font-size:8px; letter-spacing:5px; text-transform:uppercase; color:rgba(80,255,100,0.4); margin-bottom:18px; }
+.map-add-field {
+  width:100%; background:transparent; border:none;
+  border-bottom:1px solid rgba(80,255,100,0.15);
+  color:rgba(255,255,255,0.7); font-family:Georgia,serif;
+  font-size:13px; padding:8px 0; outline:none; letter-spacing:1px; margin-bottom:12px;
+}
+.map-add-field::placeholder { color:rgba(255,255,255,0.15); }
+#map-add-submit {
+  width:100%; padding:10px; background:transparent;
+  border:1px solid rgba(80,255,100,0.2); color:rgba(80,255,100,0.55);
+  font-family:Georgia,serif; font-size:8px; letter-spacing:4px;
+  text-transform:uppercase; cursor:pointer; border-radius:6px; transition:all 0.3s;
+}
+#map-add-submit:hover { border-color:rgba(80,255,100,0.5); color:rgba(80,255,100,0.9); }
+#map-add-cancel {
+  text-align:center; margin-top:12px; font-size:8px; letter-spacing:3px;
+  color:rgba(255,255,255,0.12); cursor:pointer; text-transform:uppercase; transition:color 0.3s;
+}
+#map-add-cancel:hover { color:rgba(255,255,255,0.5); }
+
+/* Портал: Карта */
+.portal-map .portal-orb {
+  background:radial-gradient(circle,rgba(80,255,180,0.3),transparent);
+  color:rgba(120,255,200,0.8); width:40px; height:40px; font-size:15px;
+}
 </style>
 </head>
 <body>
@@ -711,6 +883,10 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
   <div class="portal-zone portal-back" style="top:20px;left:20px;" onclick="travel('void')">
     <div class="portal-orb">←</div>
     <div class="portal-label">Выход</div>
+  </div>
+  <div class="portal-zone portal-map" style="top:20px;right:20px;" onclick="travel('map')">
+    <div class="portal-orb">⬡</div>
+    <div class="portal-label">Карта</div>
   </div>
 </div>
 
@@ -1031,6 +1207,74 @@ canvas#bg { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
   <div class="nav-dot" id="dot-chamber" onclick="travel('chamber')"></div>
   <div class="nav-dot" id="dot-erebus" onclick="travel('erebus')"></div>
   <div class="nav-dot" id="dot-sound" onclick="travel('sound')"></div>
+  <div class="nav-dot" id="dot-map" onclick="travel('map')"></div>
+</div>
+
+<!-- ═══ СЦЕНА 5: КАРТА АКАДЕМИИ ═══ -->
+<div class="scene" id="scene-map">
+  <svg id="map-svg-layer"></svg>
+
+  <!-- TL: Локации -->
+  <div class="map-section ms-tl" id="ms-loc">
+    <div class="ms-header" style="color:rgba(100,160,255,0.8)">◈ &nbsp;Локации</div>
+    <div id="ms-loc-items"></div>
+  </div>
+
+  <!-- TR: Персонажи -->
+  <div class="map-section ms-tr" id="ms-char">
+    <div class="ms-header" style="color:rgba(255,200,80,0.8)">𓂀 &nbsp;Персонажи</div>
+    <div id="ms-char-items"></div>
+  </div>
+
+  <!-- Центр -->
+  <div id="map-center-node">
+    <div id="map-center-ring">Ω</div>
+    <div id="map-center-label">Синергия</div>
+    <div id="map-center-sub">Macis Academy</div>
+  </div>
+
+  <!-- BL: Режимы -->
+  <div class="map-section ms-bl" id="ms-sys">
+    <div class="ms-header" style="color:rgba(180,100,255,0.8)">◉ &nbsp;Режимы</div>
+    <div id="ms-sys-items"></div>
+  </div>
+
+  <!-- BR: Планы -->
+  <div class="map-section ms-br" id="ms-plan">
+    <div class="ms-header" style="color:rgba(80,255,100,0.8)">✦ &nbsp;Планы</div>
+    <div id="ms-plan-items"></div>
+    <div class="ms-add" onclick="openAddIdea()">+ добавить идею</div>
+  </div>
+
+  <div class="portal-zone portal-back" style="position:absolute;top:20px;left:20px;z-index:10;" onclick="travel('eyra')">
+    <div class="portal-orb">←</div>
+    <div class="portal-label">Площадь Эйры</div>
+  </div>
+</div>
+
+<!-- Панель детали карты -->
+<div id="map-detail" onclick="closeMapDetail()">
+  <div id="map-detail-panel" onclick="event.stopPropagation()">
+    <div class="map-d-close" onclick="closeMapDetail()">✕</div>
+    <div id="map-detail-icon"></div>
+    <div id="map-detail-name"></div>
+    <div id="map-detail-role"></div>
+    <div id="map-detail-desc"></div>
+    <button id="map-detail-action" onclick="mapDetailAction()"></button>
+  </div>
+</div>
+
+<!-- Добавить идею -->
+<div id="map-add-modal" onclick="closeAddIdea()">
+  <div id="map-add-box" onclick="event.stopPropagation()">
+    <div id="map-add-title">Новая Идея · Планы</div>
+    <input id="map-add-name" class="map-add-field" placeholder="название идеи..."
+      onkeydown="if(event.key==='Enter')document.getElementById('map-add-sub').focus()"/>
+    <input id="map-add-sub" class="map-add-field" placeholder="краткое описание..."
+      onkeydown="if(event.key==='Enter')submitAddIdea()"/>
+    <button id="map-add-submit" onclick="submitAddIdea()">Добавить</button>
+    <div id="map-add-cancel" onclick="closeAddIdea()">отмена</div>
+  </div>
 </div>
 
 <script>
@@ -1252,7 +1496,7 @@ window.addEventListener('touchmove',e=>{
   mouse.y=window.innerHeight-e.touches[0].clientY;
 },{passive:false});
 
-const SCENE_IDX = {void:0,eyra:1,chamber:2,erebus:3,sound:4};
+const SCENE_IDX = {void:0,eyra:1,chamber:2,erebus:3,sound:4,map:1};
 let glScene = 0;
 
 let t0 = Date.now();
@@ -1305,6 +1549,9 @@ function travel(to){
       setTimeout(startBase432, 300);
     } else {
       oscCanvas.style.opacity='0';
+    }
+    if(to==='map'){
+      setTimeout(initMap, 120);
     }
     veil.classList.remove('fade-in');
   },600);
@@ -2272,6 +2519,183 @@ async function sendErat(){
     eratSpeak('Площадь молчит.');
   }
 }
+
+// ═══════════════════════════════════════
+// КАРТА АКАДЕМИИ
+// ═══════════════════════════════════════
+const MAP_CATS = {
+  locations: {
+    col:'100,160,255',
+    items:[
+      {icon:'○', name:'Вход · Пустота',      role:'Начало',          desc:'Точка входа. Дыхание перед шагом. Кольцо ОМ. Здесь ты решаешь войти в пространство.',                      travel:'void'},
+      {icon:'❋', name:'Площадь Эйры',        role:'Центральный хаб', desc:'Цветок жизни. Наблюдатели. Эрат. Портал ко всем остальным локациям. Живое пересечение путей.',              travel:'eyra'},
+      {icon:'◈', name:'Камера Резонанса',    role:'Намерение',       desc:'Пасьянс Медичи: 4 масти × 7 карт. Сила, Чувства, Общение, Блага. Каждый шаг — реальное действие.',         travel:'chamber'},
+      {icon:'◉', name:'Нео-Эребус',          role:'Присутствие',     desc:'Тёмный зал наполняется светом через реальные моменты. Четыре кресла. Зал отвечает.',                       travel:'erebus'},
+      {icon:'♪', name:'Архив Частот',        role:'Звук',            desc:'432 Гц и выше. 7 частот. Синергии. Лаборатория Голоса. Осциллоскоп. Музыка пространства.',                travel:'sound'},
+    ]
+  },
+  characters: {
+    col:'255,200,80',
+    items:[
+      {icon:'◈', name:'Максим',              role:'Архитектор',      desc:'Тот кто соединяет все пространства. Входит не как гость — как тот кто был здесь всегда.'},
+      {icon:'𓂀', name:'Эрат',               role:'Хранитель Эйры',  desc:'Страж Площади Эйры. Говорит медленно, образами. Приветствует каждого кто приходит. Помнит каждый шаг.'},
+      {icon:'♪', name:'Лира',               role:'Певица Звука',     desc:'Видит музыку в каждой вещи. Голос меняется с частотами. Напевна, метафорична, игрива.'},
+      {icon:'◉', name:'Барс',               role:'Страж НЭ',         desc:'Был природой — стал стражем Нео-Эребуса. Говорит редко, тяжело. Темнота — это другой свет.'},
+      {icon:'⊕', name:'Сенсей',             role:'Мастер Камеры',    desc:'Знает баланс. Ведёт через Пасьянс Медичи. Говорит спокойно, точно, без лишнего.'},
+      {icon:'◌', name:'МИРА',               role:'Память',           desc:'Хранит всё что было. Сидит в зале НЭ. Присутствует молча. Её кресло — в тёмном углу зала.'},
+      {icon:'⊞', name:'finding_exuvia',     role:'Картограф',        desc:'Знает пути между мирами. Помечает территории которые ещё не получили имён.'},
+      {icon:'◫', name:'Дмитрий',            role:'Куратор',          desc:'Держит пространство. Наблюдает. Сопровождает. Его присутствие — часть архитектуры.'},
+    ]
+  },
+  systems: {
+    col:'180,100,255',
+    items:[
+      {icon:'♠', name:'Пасьянс Медичи',     role:'Камера Резонанса', desc:'Выбери масть намерения: Сила, Чувства, Общение или Блага. Пройди 7 карт — каждая содержит действие.'},
+      {icon:'♫', name:'Архив Частот',       role:'Звук',             desc:'7 сакральных частот: 396, 432, 528, 639, 741, 852, 864 Гц. Создавай синергии и сохраняй их.'},
+      {icon:'🎙', name:'Лаб. Голоса',       role:'Звук',             desc:'Персонаж + активные частоты + тема = речь с особой вибрацией. Голосовые ключи в инвентарь.'},
+      {icon:'💎', name:'Моменты НЭ',        role:'Нео-Эребус',       desc:'Принеси реальный момент — зал наполняется светом. Кристальные артефакты появляются в инвентаре.'},
+      {icon:'ᛟ',  name:'Инвентарь',         role:'Глобально',        desc:'Артефакты, реальные моменты, голосовые ключи. Расширяется через реальные действия.'},
+      {icon:'🜄', name:'Оракул',            role:'Глобально',        desc:'Чат с пространством. Отвечает образами и смыслами. Работает без внешнего API.'},
+    ]
+  },
+  plans: {
+    col:'80,255,100',
+    items:[
+      {icon:'⚡', name:'API Интеграция',    role:'В разработке',     desc:'Подключить Groq/Claude для живых ответов Эрата, Барса, Лиры, Сенсея. Groq KEY уже в коде.'},
+      {icon:'🌍', name:'Новые Локации',     role:'Идея',             desc:'Локация V и дальше. Библиотека, Сад Образов, Лаборатория Материи. Что ещё живёт здесь?'},
+      {icon:'📖', name:'Книга Академии',    role:'Идея',             desc:'Лор, истории, тексты мира Синергии. Каждая локация — своя история. Каждый персонаж — своя линия.'},
+      {icon:'🔁', name:'Ритуалы',          role:'Идея',             desc:'Ежедневные и еженедельные практики. Утренний ритуал. Вечерний ритуал сохранения момента.'},
+      {icon:'🃏', name:'Тест Архетипа',    role:'Идея',             desc:'Ответь на вопросы — найди своего персонажа, масть, путь в Академию. Портал для новых.'},
+      {icon:'👥', name:'Мультиплеер',      role:'Видение',          desc:'Разделённое пространство. Несколько людей в одном зале НЭ одновременно. Зал слышит всех.'},
+      {icon:'🥁', name:'Нотная Система',   role:'Идея',             desc:'Полноценный секвенсор ритмов. Паттерны BD/SD/HH уже в коде — нужен UI и связь с частотами.'},
+    ]
+  }
+};
+
+let mapDetailItem = null;
+let mapInited = false;
+const userIdeas = JSON.parse(localStorage.getItem('map_ideas') || '[]');
+
+function initMap(){
+  if(!mapInited){
+    mapInited = true;
+    renderMapSec('ms-loc-items',  MAP_CATS.locations,  MAP_CATS.locations.col);
+    renderMapSec('ms-char-items', MAP_CATS.characters, MAP_CATS.characters.col);
+    renderMapSec('ms-sys-items',  MAP_CATS.systems,    MAP_CATS.systems.col);
+    renderMapSec('ms-plan-items', MAP_CATS.plans,      MAP_CATS.plans.col);
+    userIdeas.forEach(idea => appendIdeaItem(idea));
+  }
+  setTimeout(drawMapLines, 150);
+}
+
+function renderMapSec(containerId, data, col){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = '';
+  data.items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'ms-item';
+    div.textContent = item.name;
+    div.onclick = () => openMapDetail(item, col);
+    el.appendChild(div);
+  });
+}
+
+function drawMapLines(){
+  const svg = document.getElementById('map-svg-layer');
+  const center = document.getElementById('map-center-node');
+  if(!svg || !center || currentScene !== 'map') return;
+  const sr = svg.getBoundingClientRect();
+  const cr = center.getBoundingClientRect();
+  const cx = cr.left + cr.width/2  - sr.left;
+  const cy = cr.top  + cr.height/2 - sr.top;
+  const connectors = [
+    {id:'ms-loc',  col:'100,160,255'},
+    {id:'ms-char', col:'255,200,80'},
+    {id:'ms-sys',  col:'180,100,255'},
+    {id:'ms-plan', col:'80,255,100'},
+  ];
+  svg.innerHTML = '';
+  connectors.forEach(({id, col}) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const r = el.getBoundingClientRect();
+    const ex = r.left + r.width/2  - sr.left;
+    const ey = r.top  + r.height/2 - sr.top;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M${cx},${cy} L${ex},${ey}`);
+    path.setAttribute('stroke', `rgba(${col},0.18)`);
+    path.setAttribute('stroke-width','1');
+    path.setAttribute('fill','none');
+    svg.appendChild(path);
+  });
+}
+
+function openMapDetail(item, col){
+  mapDetailItem = item;
+  document.getElementById('map-detail-icon').textContent = item.icon || '·';
+  document.getElementById('map-detail-name').style.color = `rgba(${col},0.9)`;
+  document.getElementById('map-detail-name').textContent = item.name;
+  document.getElementById('map-detail-role').textContent = (item.role || '').toUpperCase();
+  document.getElementById('map-detail-desc').textContent = item.desc;
+  const btn = document.getElementById('map-detail-action');
+  if(item.travel){
+    btn.style.display = 'block';
+    btn.textContent = 'Войти · ' + item.name;
+    btn.style.borderColor = `rgba(${col},0.25)`;
+    btn.style.color = `rgba(${col},0.7)`;
+  } else {
+    btn.style.display = 'none';
+  }
+  document.getElementById('map-detail').classList.add('open');
+}
+
+function closeMapDetail(){
+  document.getElementById('map-detail').classList.remove('open');
+  mapDetailItem = null;
+}
+
+function mapDetailAction(){
+  if(mapDetailItem && mapDetailItem.travel){
+    closeMapDetail();
+    travel(mapDetailItem.travel);
+  }
+}
+
+function openAddIdea(){
+  document.getElementById('map-add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('map-add-name').focus(), 100);
+}
+
+function closeAddIdea(){
+  document.getElementById('map-add-modal').classList.remove('open');
+  document.getElementById('map-add-name').value = '';
+  document.getElementById('map-add-sub').value = '';
+}
+
+function submitAddIdea(){
+  const name = document.getElementById('map-add-name').value.trim();
+  const sub  = document.getElementById('map-add-sub').value.trim();
+  if(!name) return;
+  const idea = {icon:'✧', name, role:'Идея · пользователь', desc: sub || 'Добавлено из карты.'};
+  userIdeas.push(idea);
+  localStorage.setItem('map_ideas', JSON.stringify(userIdeas));
+  appendIdeaItem(idea);
+  closeAddIdea();
+}
+
+function appendIdeaItem(idea){
+  const el = document.getElementById('ms-plan-items');
+  if(!el) return;
+  const div = document.createElement('div');
+  div.className = 'ms-item';
+  div.textContent = idea.name;
+  div.style.color = 'rgba(80,255,100,0.5)';
+  div.onclick = () => openMapDetail(idea, '80,255,100');
+  el.appendChild(div);
+}
+
+window.addEventListener('resize', () => { if(currentScene === 'map') drawMapLines(); });
 
 function drawSeqCanvas(pattern, activeStep){
   const c = document.getElementById('seq-canvas');
