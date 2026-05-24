@@ -1,0 +1,49 @@
+name: Deploy LIRA to LiraMira
+
+on:
+  push:
+    branches: [main]
+    paths: [lira/**]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 85.192.28.83
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          timeout: 120s
+          script: |
+            set -e
+            # Установка Node.js если нет
+            if ! command -v node &>/dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
+            fi
+            # PM2
+            if ! command -v pm2 &>/dev/null; then
+              npm install -g pm2
+            fi
+            # Клон или обновление репо
+            if [ -d /opt/neo-erebus/.git ]; then
+              cd /opt/neo-erebus && git pull origin main
+            else
+              git clone https://github.com/merc26513-gif/neo-erebus.git /opt/neo-erebus
+            fi
+            # Деплой LIRA
+            cp -r /opt/neo-erebus/lira /opt/lira-tmp
+            mkdir -p /opt/lira
+            cp /opt/lira-tmp/server.js /opt/lira/
+            cp /opt/lira-tmp/index.html /opt/lira/
+            cp /opt/lira-tmp/package.json /opt/lira/
+            cd /opt/lira && npm install --production
+            ufw allow 3000/tcp 2>/dev/null || true
+            pm2 stop lira 2>/dev/null || true
+            pm2 start /opt/lira/server.js --name lira
+            pm2 save
+            echo "LIRA deployed OK"

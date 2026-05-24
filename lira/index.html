@@ -579,23 +579,84 @@ function triggerGlitch(){ glitchTimer = 60; }
 function triggerWave(){ waveTimer = 1; }
 
 // ═══════════════════════════════════════════════════════
-// API — только роутинг смысла
+// ЛОКАЛЬНЫЙ КЛАССИФИКАТОР — без API-ключа
 // ═══════════════════════════════════════════════════════
-async function classifyWord(word, existing) {
-  const res = await fetch("https://api.anthropic.com/v1/messages",{
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-20250514", max_tokens:100,
-      messages:[{role:"user",content:
-        `Классифицируй смысл слова "${word}". Контекст: ${existing.map(a=>a.word).join(', ')||'пусто'}.
-Архетипы: fire water field chaos light void mind time sound
-Верни ТОЛЬКО JSON без пояснений: {"archetypes":["a1","a2"],"essence":"3 слова рус","x":0.1-0.9,"y":0.1-0.8}`
-      }]
-    })
+const WORD_MAP = [
+  { keys:['огонь','пламя','жар','огн','пожар','fire','flame','burn','жги','ярость','гнев','страсть','злость','ненависть','бешенств','взрыв','бомб','горит','горю','горел'],
+    arch:['fire'], ess:'жар страсть сила' },
+  { keys:['вода','море','волна','поток','река','лёд','дождь','слёзы','плач','water','wave','ocean','flow','river','rain','tears','холод','туман','влажн','мокр','тает'],
+    arch:['water'], ess:'поток глубина покой' },
+  { keys:['поле','простор','свобода','открыт','бескрайн','даль','field','open','freedom','пространств','воздух','степь','луг','горизонт'],
+    arch:['field'], ess:'простор ветер воля' },
+  { keys:['хаос','беспорядок','сломан','глитч','рандом','chaos','random','broken','noise','шум','случай','неопределённ','неизвест','вихрь','буря','круговерть'],
+    arch:['chaos'], ess:'хаос случай разрыв' },
+  { keys:['свет','луч','ясность','чистота','свечен','сияние','light','glow','bright','shine','радость','надежда','рассвет','солнце','золото','сверкает'],
+    arch:['light'], ess:'свет чистота ясность' },
+  { keys:['пустота','тишина','ничто','бездна','темнота','void','empty','silence','null','ноль','молчание','нет','отсутств','небытие','угасание'],
+    arch:['void'], ess:'пустота тишина бездна' },
+  { keys:['мысль','разум','сознание','идея','понимание','знание','mind','thought','idea','concept','logic','интеллект','мозг','анализ','вопрос','ответ','думаю','думал'],
+    arch:['mind'], ess:'мысль разум знание' },
+  { keys:['время','момент','прошлое','будущее','настоящее','вечность','time','moment','past','future','eternal','ждал','вспомн','детство','история','эпоха','секунда'],
+    arch:['time'], ess:'время память вечность' },
+  { keys:['звук','музыка','голос','ритм','частота','мелодия','sound','music','voice','rhythm','frequency','тишина','тон','аккорд','бас','слышу','слышал','пою'],
+    arch:['sound'], ess:'звук ритм резонанс' },
+];
+
+const ESSENCE_FALLBACK = [
+  'сила форма смысл','энергия поток образ','свет тень движение',
+  'пространство время суть','слово образ сила','форма пустота жизнь',
+  'начало середина конец','огонь вода земля','вопрос путь ответ',
+];
+
+function classifyWord(word, existing) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const t = word.toLowerCase();
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      const rand = (a, b) => +(a + Math.random() * (b - a)).toFixed(2);
+
+      // ищем совпадения по ключевым словам
+      const hits = [];
+      for (const entry of WORD_MAP) {
+        const score = entry.keys.filter(k => t.includes(k) || k.includes(t)).length;
+        if (score > 0) hits.push({ entry, score });
+      }
+      hits.sort((a, b) => b.score - a.score);
+
+      let archetypes, essence;
+      if (hits.length >= 2) {
+        archetypes = [hits[0].entry.arch[0], hits[1].entry.arch[0]];
+        essence = hits[0].entry.ess;
+      } else if (hits.length === 1) {
+        // второй архетип — по контексту или случайно
+        const all = ['fire','water','field','chaos','light','void','mind','time','sound'];
+        const second = pick(all.filter(a => a !== hits[0].entry.arch[0]));
+        archetypes = [hits[0].entry.arch[0], second];
+        essence = hits[0].entry.ess;
+      } else {
+        // нет совпадений — хеш слова для стабильного результата
+        const all = ['fire','water','field','chaos','light','void','mind','time','sound'];
+        let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+        archetypes = [all[h % all.length], all[(h >> 4) % all.length]];
+        if (archetypes[0] === archetypes[1]) archetypes[1] = all[(h + 3) % all.length];
+        essence = pick(ESSENCE_FALLBACK);
+      }
+
+      // контекстный сдвиг — если слово уже есть в поле, смещаем позицию
+      const usedX = existing.map(a => a.x).filter(Boolean);
+      const usedY = existing.map(a => a.y).filter(Boolean);
+      let x = rand(0.15, 0.85);
+      let y = rand(0.15, 0.75);
+      // пытаемся не накладываться
+      for (let i = 0; i < 8; i++) {
+        const tooClose = usedX.some((ux, j) => Math.abs(ux - x) < 0.18 && Math.abs(usedY[j] - y) < 0.18);
+        if (!tooClose) break;
+        x = rand(0.15, 0.85); y = rand(0.15, 0.75);
+      }
+
+      resolve({ archetypes, essence, x, y });
+    }, 300 + Math.random() * 400);
   });
-  const data = await res.json();
-  const raw = data.content.map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
-  return JSON.parse(raw);
 }
 
 // ═══════════════════════════════════════════════════════
