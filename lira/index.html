@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>LIRA :: ЖИВОЕ ПОЛЕ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tektur:wght@700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;touch-action:none;}
+body{background:#020509;transition:background 1.2s;}
+#c{position:fixed;top:0;left:0;width:100%;height:100%;}
+
+/* ── HUD ── */
+#hud{
+  position:fixed;bottom:0;left:0;right:0;z-index:10;
+  padding:8px 10px 14px;
+  background:linear-gradient(transparent,rgba(2,5,9,0.97) 30%);
+  transition:background 0.8s;
+}
+#row{display:flex;gap:8px;}
+#wi{
+  flex:1;background:rgba(0,255,231,0.04);
+  border:1px solid rgba(0,255,231,0.18);border-radius:2px;
+  color:#00ffe7;font-family:'Share Tech Mono',monospace;
+  font-size:16px;padding:10px 12px;outline:none;caret-color:#f5c518;
+  -webkit-user-select:text;user-select:text;
+}
+#wi::placeholder{color:rgba(0,255,231,0.15);}
+#wi:focus{border-color:rgba(245,197,24,0.4);}
+#btn{
+  background:none;border:1px solid #f5c518;color:#f5c518;
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  letter-spacing:0.12em;padding:10px 12px;border-radius:2px;
+  cursor:pointer;white-space:nowrap;
+}
+#btn:active{background:#f5c518;color:#020509;}
+#btn:disabled{opacity:0.2;pointer-events:none;}
+
+/* статус + сессии */
+#bottom-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:5px;padding:0 2px;
+}
+#sl{font-size:9px;letter-spacing:0.15em;color:rgba(245,197,24,0.5);flex:1;}
+#session-btns{display:flex;gap:6px;}
+.s-btn{
+  font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.1em;
+  padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid rgba(0,255,231,0.2);
+  background:none;color:rgba(0,255,231,0.4);
+}
+.s-btn:active{background:rgba(0,255,231,0.1);}
+
+/* ── BADGE ── */
+#badge{
+  position:fixed;top:10px;left:12px;z-index:10;pointer-events:none;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  letter-spacing:0.3em;color:rgba(245,197,24,0.3);
+}
+#ws-dot{
+  display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:#ff3333;margin-right:5px;vertical-align:middle;
+  transition:background 0.5s;
+}
+#ws-dot.on{background:#00ff88;}
+
+/* ── LOADING ── */
+#loading{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:20;
+  pointer-events:none;opacity:0;transition:opacity 0.3s;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:10px;
+}
+#lw{
+  font-family:'Tektur',sans-serif;font-size:clamp(22px,8vw,48px);
+  font-weight:900;letter-spacing:0.15em;color:#f5c518;
+  text-shadow:0 0 30px #f5c518;
+  animation:gp 0.9s ease-in-out infinite alternate;
+}
+#ls{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.3em;color:rgba(0,255,231,0.35);}
+@keyframes gp{
+  from{text-shadow:0 0 20px #f5c518;}
+  to{text-shadow:0 0 60px #f5c518,0 0 120px rgba(255,80,0,0.3);}
+}
+
+/* ── SESSION PANEL ── */
+#spanel{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:30;
+  background:rgba(2,5,9,0.92);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+#spanel.open{opacity:1;pointer-events:auto;}
+#spanel h2{font-family:'Tektur',sans-serif;font-size:16px;letter-spacing:0.3em;color:#f5c518;}
+#session-list{display:flex;flex-direction:column;gap:8px;width:240px;max-height:200px;overflow-y:auto;}
+.sess-item{
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  padding:8px 12px;border:1px solid rgba(0,255,231,0.2);border-radius:2px;
+  color:#00ffe7;cursor:pointer;letter-spacing:0.1em;
+}
+.sess-item:active{background:rgba(0,255,231,0.1);}
+#sess-name-input{
+  background:rgba(0,255,231,0.04);border:1px solid rgba(0,255,231,0.3);
+  border-radius:2px;color:#00ffe7;font-family:'Share Tech Mono',monospace;
+  font-size:14px;padding:8px 12px;outline:none;width:240px;
+  caret-color:#f5c518;
+}
+.panel-btn{
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.2em;
+  padding:8px 20px;border:1px solid #f5c518;background:none;color:#f5c518;
+  border-radius:2px;cursor:pointer;width:240px;
+}
+.panel-btn:active{background:#f5c518;color:#020509;}
+#close-panel{
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:0.2em;
+  color:rgba(0,255,231,0.3);background:none;border:none;cursor:pointer;margin-top:8px;
+}
+</style>
+</head>
+<body>
+
+<div id="badge"><span id="ws-dot"></span>LIRA :: ЖИВОЕ ПОЛЕ</div>
+<canvas id="c"></canvas>
+<div id="loading"><div id="lw"></div><div id="ls">LIRA ЧИТАЕТ СМЫСЛ</div></div>
+
+<!-- SESSION PANEL -->
+<div id="spanel">
+  <h2>СЕССИИ ПОЛЯ</h2>
+  <div id="session-list"></div>
+  <input id="sess-name-input" placeholder="имя новой сессии..." autocomplete="off">
+  <button class="panel-btn" onclick="saveSession()">СОХРАНИТЬ ТЕКУЩЕЕ ПОЛЕ</button>
+  <button id="close-panel" onclick="closePanel()">✕ закрыть</button>
+</div>
+
+<div id="hud">
+  <div id="row">
+    <input id="wi" type="text" placeholder="смысл или команда..."
+      maxlength="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <button id="btn">БРОСИТЬ</button>
+  </div>
+  <div id="bottom-row">
+    <span id="sl">поле пусто</span>
+    <div id="session-btns">
+      <button class="s-btn" onclick="openPanel()">СЕССИИ</button>
+      <button class="s-btn" onclick="clearField()">ОЧИСТИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CANVAS
+// ═══════════════════════════════════════════════════════
+const C = document.getElementById('c');
+const cx = C.getContext('2d');
+let W, H;
+function resize(){ W=C.width=innerWidth; H=C.height=innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ═══════════════════════════════════════════════════════
+// WEBSOCKET
+// ═══════════════════════════════════════════════════════
+let ws = null;
+let wsReady = false;
+const wsDot = document.getElementById('ws-dot');
+
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+
+  ws.onopen = () => {
+    wsReady = true;
+    wsDot.classList.add('on');
+    setStatus('WebSocket подключён');
+  };
+  ws.onclose = () => {
+    wsReady = false;
+    wsDot.classList.remove('on');
+    setTimeout(connectWS, 3000); // реконнект
+  };
+  ws.onerror = () => {
+    wsReady = false;
+    wsDot.classList.remove('on');
+  };
+  ws.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+
+    if (msg.type === 'sessions_list') {
+      renderSessionList(msg.sessions);
+    }
+    if (msg.type === 'session_loaded') {
+      loadStateFromServer(msg.state);
+      setStatus(`сессия «${msg.name}» загружена`);
+    }
+    if (msg.type === 'field_update') {
+      // синхронизация от другого клиента
+      syncFromRemote(msg.state);
+    }
+    if (msg.type === 'field_command') {
+      applyCommand(msg.cmd, msg.value);
+    }
+    if (msg.type === 'saved') {
+      setStatus(`✓ сохранено: «${msg.name}»`);
+    }
+    if (msg.type === 'error') {
+      setStatus('⚠ ' + msg.text);
+    }
+  };
+}
+
+// Попытка подключения (работает и без сервера — просто offline)
+try { connectWS(); } catch(e) {}
+
+function wsSend(data) {
+  if (ws && wsReady) ws.send(JSON.stringify(data));
+}
+
+// ═══════════════════════════════════════════════════════
+// ГЛОБАЛЬНОЕ СОСТОЯНИЕ
+// ═══════════════════════════════════════════════════════
+let agents = [];
+let fieldBg = { r:2, g:5, b:9 };       // текущий фон
+let fieldBgTarget = { r:2, g:5, b:9 }; // целевой фон (плавный переход)
+let frame = 0;
+let T = 0;
+
+// ═══════════════════════════════════════════════════════
+// КОМАНДЫ ПОЛЯ — вот здесь "зелёный фон" и работает
+// ═══════════════════════════════════════════════════════
+const COLOR_NAMES = {
+  'зелен': {r:0,g:20,b:5}, 'green': {r:0,g:20,b:5},
+  'красн': {r:20,g:0,b:2}, 'red': {r:20,g:0,b:2},
+  'синий': {r:2,g:5,b:25}, 'blue': {r:2,g:5,b:25},
+  'белый': {r:240,g:240,b:240}, 'white': {r:240,g:240,b:240},
+  'светл': {r:200,g:210,b:220}, 'light': {r:200,g:210,b:220},
+  'чёрн': {r:2,g:5,b:9}, 'черн': {r:2,g:5,b:9}, 'black': {r:2,g:5,b:9},
+  'тёмн': {r:2,g:2,b:4}, 'темн': {r:2,g:2,b:4}, 'dark': {r:2,g:2,b:4},
+  'золот': {r:40,g:30,b:2}, 'gold': {r:40,g:30,b:2},
+  'фиолет': {r:15,g:2,b:25}, 'purple': {r:15,g:2,b:25},
+};
+
+function parseCommand(text) {
+  const t = text.toLowerCase().trim();
+
+  // фон / цвет фона
+  if (t.includes('фон') || t.includes('background') || t.includes('bg') ||
+      t.includes('свет') && t.includes('фон') || t.includes('цвет')) {
+    for (const [key, col] of Object.entries(COLOR_NAMES)) {
+      if (t.includes(key)) return { cmd: 'bg', value: col };
+    }
+  }
+  // прямое упоминание цвета без слова "фон"
+  for (const [key, col] of Object.entries(COLOR_NAMES)) {
+    if (t === key || t.startsWith(key+' ') || t.endsWith(' '+key)) {
+      return { cmd: 'bg', value: col };
+    }
+  }
+
+  // очистить
+  if (t === 'очистить' || t === 'clear' || t === 'сброс' || t === 'reset') {
+    return { cmd: 'clear' };
+  }
+  // глитч
+  if (t.includes('глитч') || t.includes('glitch')) {
+    return { cmd: 'glitch' };
+  }
+  // волна
+  if (t === 'волна' || t === 'wave') {
+    return { cmd: 'wave' };
+  }
+
+  return null;
+}
+
+function applyCommand(cmd, value) {
+  if (cmd === 'bg') {
+    fieldBgTarget = value;
+    // Обновляем HUD фон тоже
+    document.getElementById('hud').style.background =
+      `linear-gradient(transparent, rgba(${value.r},${value.g},${value.b},0.97) 30%)`;
+  }
+  if (cmd === 'clear') clearField();
+  if (cmd === 'glitch') triggerGlitch();
+  if (cmd === 'wave') triggerWave();
+}
+
+// ═══════════════════════════════════════════════════════
+// АРХЕТИПЫ ВИЗУАЛИЗАЦИИ
+// ═══════════════════════════════════════════════════════
+const ARCHETYPES = {
+
+  fire: {
+    init(ag) {
+      ag.particles = [];
+      for(let i=0;i<100;i++) ag.particles.push(newFireP(ag));
+    },
+    update(ag) {
+      for(let i=0;i<ag.particles.length;i++){
+        const p=ag.particles[i];
+        p.life-=0.018+Math.random()*0.01;
+        p.x+=p.vx+Math.sin(T*3+p.seed)*0.4;
+        p.y-=p.vy; p.vy*=1.02;
+        if(p.life<=0) ag.particles[i]=newFireP(ag);
+      }
+    },
+    draw(ag) {
+      for(const p of ag.particles){
+        const hue=10+p.life*50;
+        cx.beginPath(); cx.arc(p.x,p.y,p.r*(0.3+p.life*0.7),0,Math.PI*2);
+        cx.fillStyle=`hsla(${hue},100%,${40+p.life*40}%,${p.life*0.7})`; cx.fill();
+      }
+    }
+  },
+
+  water: {
+    init(ag) {
+      const res=4;
+      ag.res=res;
+      ag.WC=Math.ceil(W/res); ag.HC=Math.ceil(H/res);
+      ag.cur=new Float32Array(ag.WC*ag.HC);
+      ag.prv=new Float32Array(ag.WC*ag.HC);
+      const ix=Math.floor(W/2/res), iy=Math.floor(H/2/res);
+      for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){
+        const nx=ix+dx,ny=iy+dy;
+        if(nx>=0&&nx<ag.WC&&ny>=0&&ny<ag.HC)
+          ag.cur[ny*ag.WC+nx]=90*(1-Math.sqrt(dx*dx+dy*dy)/5);
+      }
+    },
+    update(ag) {
+      const {WC,HC,cur,prv}=ag;
+      const nxt=new Float32Array(WC*HC);
+      for(let y=1;y<HC-1;y++) for(let x=1;x<WC-1;x++){
+        const i=y*WC+x;
+        const lap=cur[(y-1)*WC+x]+cur[(y+1)*WC+x]+cur[y*WC+x-1]+cur[y*WC+x+1]-4*cur[i];
+        nxt[i]=(2*cur[i]-prv[i]+0.45*lap)*0.992;
+      }
+      if(Math.random()<0.04){
+        const rx=1+Math.floor(Math.random()*(WC-2));
+        const ry=1+Math.floor(Math.random()*(HC-2));
+        nxt[ry*WC+rx]+=40*(Math.random()-0.5);
+      }
+      ag.prv=cur; ag.cur=nxt;
+    },
+    draw(ag) {
+      const {WC,HC,cur,res}=ag;
+      for(let y=0;y<HC;y++) for(let x=0;x<WC;x++){
+        const v=cur[y*WC+x];
+        if(Math.abs(v)<2) continue;
+        const n=Math.max(-1,Math.min(1,v/60));
+        cx.fillStyle=n>0?`rgba(80,200,255,${Math.abs(n)*0.65})`:`rgba(0,50,180,${Math.abs(n)*0.35})`;
+        cx.fillRect(x*res,y*res,res,res);
+      }
+    }
+  },
+
+  field: {
+    init(ag) {
+      ag.lines=[];
+      for(let i=0;i<28;i++) ag.lines.push({
+        angle:(i/28)*Math.PI*2,
+        speed:0.003+Math.random()*0.004,
+        phase:Math.random()*Math.PI*2,
+        width:0.4+Math.random()*0.8,
+        reach:0.25+Math.random()*0.5,
+      });
+      ag.perim=[];
+      for(let i=0;i<180;i++) ag.perim.push({
+        side:Math.floor(Math.random()*4),
+        pos:Math.random(),
+        off:(Math.random()-0.5)*6,
+        spd:(Math.random()-0.5)*0.4,
+        a:0.1+Math.random()*0.35,
+        sz:1+Math.random()*2,
+      });
+    },
+    update(ag) {
+      for(const p of ag.perim) p.pos=(p.pos+p.spd*0.002+1)%1;
+    },
+    draw(ag) {
+      const mx=W/2,my=H/2,md=Math.min(W,H);
+      for(const fl of ag.lines){
+        const a=fl.angle+Math.sin(T*fl.speed*100+fl.phase)*0.3;
+        const alpha=Math.max(0,0.07+Math.sin(T*fl.speed*80+fl.phase)*0.04);
+        cx.beginPath();
+        cx.moveTo(mx+Math.cos(a)*md*0.04, my+Math.sin(a)*md*0.04);
+        cx.lineTo(mx+Math.cos(a)*md*fl.reach, my+Math.sin(a)*md*fl.reach);
+        cx.strokeStyle=`rgba(0,255,231,${alpha})`; cx.lineWidth=fl.width; cx.stroke();
+      }
+      for(const p of ag.perim){
+        let px,py;
+        if(p.side===0){px=p.pos*W;py=p.off+2;}
+        else if(p.side===1){px=W-2;py=p.pos*H;}
+        else if(p.side===2){px=p.pos*W;py=H-2;}
+        else{px=2;py=p.pos*H;}
+        cx.beginPath(); cx.arc(px,py,p.sz,0,Math.PI*2);
+        cx.fillStyle=`rgba(245,197,24,${p.a})`; cx.fill();
+      }
+      for(let i=0;i<3;i++){
+        const ph=((T*0.35+i*0.33))%1;
+        cx.beginPath(); cx.arc(mx,my,ph*md*0.55,0,Math.PI*2);
+        cx.strokeStyle=`rgba(0,255,231,${(1-ph)*0.12})`; cx.lineWidth=1; cx.stroke();
+      }
+    }
+  },
+
+  chaos: {
+    init(ag) {
+      ag.pts=[];
+      for(let i=0;i<200;i++) ag.pts.push({
+        x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-0.5)*3,vy:(Math.random()-0.5)*3,
+        life:Math.random(),hue:Math.random()*360,sz:1+Math.random()*3,
+      });
+      ag.slices=[];
+    },
+    update(ag) {
+      for(const p of ag.pts){p.x=(p.x+p.vx+W)%W;p.y=(p.y+p.vy+H)%H;p.life=(p.life+0.01)%1;p.hue=(p.hue+2)%360;}
+      if(Math.random()<0.12){
+        ag.slices=[];
+        for(let i=0;i<4+Math.floor(Math.random()*5);i++)
+          ag.slices.push({y:Math.random()*H,h:2+Math.random()*18,dx:(Math.random()-0.5)*70,life:1});
+      }
+      for(const s of ag.slices) s.life-=0.06;
+      ag.slices=ag.slices.filter(s=>s.life>0);
+    },
+    draw(ag) {
+      for(const p of ag.pts){
+        cx.fillStyle=`hsla(${p.hue},100%,60%,${p.life*0.35})`;
+        cx.fillRect(p.x,p.y,p.sz,p.sz);
+      }
+      for(const s of ag.slices){
+        if(s.y+s.h>H) continue;
+        try{const img=cx.getImageData(0,Math.floor(s.y),W,Math.floor(s.h));cx.putImageData(img,s.dx,s.y);}catch(e){}
+        cx.fillStyle=`rgba(255,0,80,${s.life*0.2})`; cx.fillRect(0,s.y,W,s.h);
+      }
+      if(Math.random()<0.25){cx.fillStyle=`rgba(0,255,231,${Math.random()*0.12})`;cx.fillRect(0,Math.random()*H,W,1);}
+    }
+  },
+
+  light: {
+    init(ag) {
+      ag.rays=[];
+      for(let i=0;i<55;i++) ag.rays.push({angle:(i/55)*Math.PI*2,speed:0.002+Math.random()*0.005,phase:Math.random()*Math.PI*2,w:0.3+Math.random()*1.2,reach:0.2+Math.random()*0.65});
+    },
+    update(ag){},
+    draw(ag) {
+      const mx=W/2,my=H/2,md=Math.min(W,H);
+      for(const r of ag.rays){
+        const a=r.angle+T*r.speed;
+        const pulse=0.5+Math.sin(T*r.speed*10+r.phase)*0.5;
+        cx.beginPath(); cx.moveTo(mx,my);
+        cx.lineTo(mx+Math.cos(a)*md*r.reach*pulse, my+Math.sin(a)*md*r.reach*pulse);
+        cx.strokeStyle=`rgba(255,240,180,${pulse*0.055*r.w})`; cx.lineWidth=r.w; cx.stroke();
+      }
+      for(let i=0;i<8;i++){
+        const ph=((T*0.25+i*0.125))%1;
+        cx.beginPath(); cx.arc(mx,my,ph*md*0.6,0,Math.PI*2);
+        cx.strokeStyle=`rgba(255,255,200,${(1-ph)*0.1})`; cx.lineWidth=1; cx.stroke();
+      }
+    }
+  },
+
+  mind: {
+    init(ag) {
+      ag.nodes=[];
+      for(let i=0;i<18;i++) ag.nodes.push({
+        x:80+Math.random()*(W-160),y:80+Math.random()*(H-200),
+        vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,
+        r:2+Math.random()*3,phase:Math.random()*Math.PI*2,
+      });
+    },
+    update(ag) {
+      for(const n of ag.nodes){
+        n.x+=n.vx;n.y+=n.vy;n.phase+=0.02;
+        if(n.x<40||n.x>W-40)n.vx*=-1;
+        if(n.y<40||n.y>H-160)n.vy*=-1;
+      }
+    },
+    draw(ag) {
+      const nd=ag.nodes;
+      for(let i=0;i<nd.length;i++) for(let j=i+1;j<nd.length;j++){
+        const dx=nd[j].x-nd[i].x,dy=nd[j].y-nd[i].y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d>190) continue;
+        cx.beginPath(); cx.moveTo(nd[i].x,nd[i].y); cx.lineTo(nd[j].x,nd[j].y);
+        cx.strokeStyle=`rgba(0,200,255,${(1-d/190)*0.18})`; cx.lineWidth=0.6; cx.stroke();
+      }
+      for(const n of nd){
+        const pulse=Math.sin(T*1.5+n.phase)*0.5+0.5;
+        cx.beginPath(); cx.arc(n.x,n.y,n.r*(0.7+pulse*0.5),0,Math.PI*2);
+        cx.fillStyle=`rgba(0,200,255,${0.4+pulse*0.3})`; cx.fill();
+      }
+    }
+  },
+
+  void: {
+    init(ag) {
+      ag.sparks=[];
+      for(let i=0;i<45;i++) ag.sparks.push({
+        angle:Math.random()*Math.PI*2,r:0.3+Math.random()*0.45,
+        speed:(Math.random()-0.5)*0.002,sz:0.5+Math.random()*1.5,
+        a:0.1+Math.random()*0.3,phase:Math.random()*Math.PI*2,
+      });
+    },
+    update(ag){ for(const s of ag.sparks) s.angle+=s.speed; },
+    draw(ag) {
+      const mx=W/2,my=H/2,md=Math.min(W,H);
+      const grd=cx.createRadialGradient(mx,my,0,mx,my,md*0.42);
+      grd.addColorStop(0,'rgba(0,0,8,0.4)'); grd.addColorStop(1,'rgba(0,0,8,0)');
+      cx.beginPath(); cx.arc(mx,my,md*0.42,0,Math.PI*2); cx.fillStyle=grd; cx.fill();
+      for(const s of ag.sparks){
+        const r=s.r*md*0.48; const pulse=Math.sin(T*0.5+s.phase)*0.5+0.5;
+        cx.beginPath(); cx.arc(mx+Math.cos(s.angle)*r,my+Math.sin(s.angle)*r,s.sz*pulse,0,Math.PI*2);
+        cx.fillStyle=`rgba(100,150,255,${s.a*pulse})`; cx.fill();
+      }
+    }
+  },
+
+  time: {
+    init(ag) {
+      ag.spiral=[];
+      for(let i=0;i<380;i++){
+        const a=i*0.15,r=i*0.58;
+        ag.spiral.push({a,r,sz:0.5+Math.random()*1.5,phase:Math.random()*Math.PI*2});
+      }
+    },
+    update(ag){},
+    draw(ag) {
+      const mx=W/2,my=H/2;
+      for(let i=0;i<ag.spiral.length;i++){
+        const p=ag.spiral[i];
+        const angle=p.a+T*0.15;
+        const x=mx+Math.cos(angle)*p.r,y=my+Math.sin(angle)*p.r;
+        if(x<0||x>W||y<0||y>H) continue;
+        const norm=1-i/ag.spiral.length;
+        const pulse=Math.sin(T*0.5+p.phase)*0.3+0.7;
+        cx.beginPath(); cx.arc(x,y,p.sz*pulse,0,Math.PI*2);
+        cx.fillStyle=`rgba(200,160,255,${norm*0.45*pulse})`; cx.fill();
+      }
+    }
+  },
+
+  sound: {
+    init(ag){
+      ag.waves=[];
+      for(let i=0;i<7;i++) ag.waves.push({freq:0.5+i*0.6,amp:18+i*7,phase:i*0.4,hue:180+i*20});
+    },
+    update(ag){},
+    draw(ag){
+      for(const w of ag.waves){
+        cx.beginPath();
+        for(let x=0;x<=W;x+=2){
+          const y=H/2+Math.sin(x*w.freq*0.02+T*2+w.phase)*w.amp+Math.sin(x*w.freq*0.01+T*1.3+w.phase*2)*w.amp*0.4;
+          x===0?cx.moveTo(x,y):cx.lineTo(x,y);
+        }
+        cx.strokeStyle=`hsla(${w.hue},80%,60%,0.12)`; cx.lineWidth=1; cx.stroke();
+      }
+    }
+  },
+
+};
+
+function newFireP(ag){
+  return {
+    x:ag.x+(Math.random()-0.5)*(ag.radius||60)*0.8,
+    y:ag.y+(ag.radius||60)*0.3,
+    vx:(Math.random()-0.5)*1.2,vy:0.5+Math.random()*2.5,
+    life:0.4+Math.random()*0.6,r:2+Math.random()*4,seed:Math.random()*100,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOBAL EFFECTS
+// ═══════════════════════════════════════════════════════
+let glitchTimer = 0;
+let waveTimer = 0;
+
+function triggerGlitch(){ glitchTimer = 60; }
+function triggerWave(){ waveTimer = 1; }
+
+// ═══════════════════════════════════════════════════════
+// ЛОКАЛЬНЫЙ КЛАССИФИКАТОР — без API-ключа
+// ═══════════════════════════════════════════════════════
+const WORD_MAP = [
+  { keys:['огонь','пламя','жар','огн','пожар','fire','flame','burn','жги','ярость','гнев','страсть','злость','ненависть','бешенств','взрыв','бомб','горит','горю','горел'],
+    arch:['fire'], ess:'жар страсть сила' },
+  { keys:['вода','море','волна','поток','река','лёд','дождь','слёзы','плач','water','wave','ocean','flow','river','rain','tears','холод','туман','влажн','мокр','тает'],
+    arch:['water'], ess:'поток глубина покой' },
+  { keys:['поле','простор','свобода','открыт','бескрайн','даль','field','open','freedom','пространств','воздух','степь','луг','горизонт'],
+    arch:['field'], ess:'простор ветер воля' },
+  { keys:['хаос','беспорядок','сломан','глитч','рандом','chaos','random','broken','noise','шум','случай','неопределённ','неизвест','вихрь','буря','круговерть'],
+    arch:['chaos'], ess:'хаос случай разрыв' },
+  { keys:['свет','луч','ясность','чистота','свечен','сияние','light','glow','bright','shine','радость','надежда','рассвет','солнце','золото','сверкает'],
+    arch:['light'], ess:'свет чистота ясность' },
+  { keys:['пустота','тишина','ничто','бездна','темнота','void','empty','silence','null','ноль','молчание','нет','отсутств','небытие','угасание'],
+    arch:['void'], ess:'пустота тишина бездна' },
+  { keys:['мысль','разум','сознание','идея','понимание','знание','mind','thought','idea','concept','logic','интеллект','мозг','анализ','вопрос','ответ','думаю','думал'],
+    arch:['mind'], ess:'мысль разум знание' },
+  { keys:['время','момент','прошлое','будущее','настоящее','вечность','time','moment','past','future','eternal','ждал','вспомн','детство','история','эпоха','секунда'],
+    arch:['time'], ess:'время память вечность' },
+  { keys:['звук','музыка','голос','ритм','частота','мелодия','sound','music','voice','rhythm','frequency','тишина','тон','аккорд','бас','слышу','слышал','пою'],
+    arch:['sound'], ess:'звук ритм резонанс' },
+];
+
+const ESSENCE_FALLBACK = [
+  'сила форма смысл','энергия поток образ','свет тень движение',
+  'пространство время суть','слово образ сила','форма пустота жизнь',
+  'начало середина конец','огонь вода земля','вопрос путь ответ',
+];
+
+function classifyWord(word, existing) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const t = word.toLowerCase();
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      const rand = (a, b) => +(a + Math.random() * (b - a)).toFixed(2);
+
+      // ищем совпадения по ключевым словам
+      const hits = [];
+      for (const entry of WORD_MAP) {
+        const score = entry.keys.filter(k => t.includes(k) || k.includes(t)).length;
+        if (score > 0) hits.push({ entry, score });
+      }
+      hits.sort((a, b) => b.score - a.score);
+
+      let archetypes, essence;
+      if (hits.length >= 2) {
+        archetypes = [hits[0].entry.arch[0], hits[1].entry.arch[0]];
+        essence = hits[0].entry.ess;
+      } else if (hits.length === 1) {
+        // второй архетип — по контексту или случайно
+        const all = ['fire','water','field','chaos','light','void','mind','time','sound'];
+        const second = pick(all.filter(a => a !== hits[0].entry.arch[0]));
+        archetypes = [hits[0].entry.arch[0], second];
+        essence = hits[0].entry.ess;
+      } else {
+        // нет совпадений — хеш слова для стабильного результата
+        const all = ['fire','water','field','chaos','light','void','mind','time','sound'];
+        let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+        archetypes = [all[h % all.length], all[(h >> 4) % all.length]];
+        if (archetypes[0] === archetypes[1]) archetypes[1] = all[(h + 3) % all.length];
+        essence = pick(ESSENCE_FALLBACK);
+      }
+
+      // контекстный сдвиг — если слово уже есть в поле, смещаем позицию
+      const usedX = existing.map(a => a.x).filter(Boolean);
+      const usedY = existing.map(a => a.y).filter(Boolean);
+      let x = rand(0.15, 0.85);
+      let y = rand(0.15, 0.75);
+      // пытаемся не накладываться
+      for (let i = 0; i < 8; i++) {
+        const tooClose = usedX.some((ux, j) => Math.abs(ux - x) < 0.18 && Math.abs(usedY[j] - y) < 0.18);
+        if (!tooClose) break;
+        x = rand(0.15, 0.85); y = rand(0.15, 0.75);
+      }
+
+      resolve({ archetypes, essence, x, y });
+    }, 300 + Math.random() * 400);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// AGENTS
+// ═══════════════════════════════════════════════════════
+function createAgent(word, cls) {
+  const margin=80, maxY=H-130;
+  const x=margin+cls.x*(W-margin*2);
+  const y=margin+cls.y*(maxY-margin);
+  const ag={ word, archetypes:cls.archetypes, essence:cls.essence, x, y,
+    radius:Math.min(W,H)*0.12, vx:(Math.random()-0.5)*0.2, vy:(Math.random()-0.5)*0.2,
+    phase:Math.random()*Math.PI*2, age:0, rd:{} };
+  for(const key of ag.archetypes){
+    if(ARCHETYPES[key]){
+      const fake={...ag};
+      ARCHETYPES[key].init(fake);
+      ag.rd[key]=fake;
+    }
+  }
+  return ag;
+}
+
+function updateAgents(){
+  for(const ag of agents){
+    ag.age++; ag.phase+=0.02;
+    ag.vx*=0.98; ag.vy*=0.98;
+    ag.vx+=(Math.random()-0.5)*0.04; ag.vy+=(Math.random()-0.5)*0.04;
+    ag.x=Math.max(60,Math.min(W-60,ag.x+ag.vx));
+    ag.y=Math.max(60,Math.min(H-120,ag.y+ag.vy));
+    for(const key of ag.archetypes){
+      if(ARCHETYPES[key]){
+        const fag=ag.rd[key];
+        fag.x=ag.x; fag.y=ag.y; fag.phase=ag.phase; fag.radius=ag.radius;
+        ARCHETYPES[key].update(fag);
+      }
+    }
+  }
+}
+
+function drawAgents(){
+  for(const ag of agents){
+    cx.globalAlpha=Math.min(1,ag.age*0.02);
+    for(const key of ag.archetypes){
+      if(ARCHETYPES[key]) ARCHETYPES[key].draw(ag.rd[key]);
+    }
+    cx.globalAlpha=1;
+    // Подпись
+    cx.font='bold 12px "Share Tech Mono"';
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillStyle='rgba(245,197,24,0.55)';
+    cx.shadowColor='rgba(245,197,24,0.3)'; cx.shadowBlur=8;
+    cx.fillText(ag.word.toUpperCase(), W/2, H/2+20);
+    cx.font='9px "Share Tech Mono"';
+    cx.fillStyle='rgba(245,197,24,0.22)';
+    cx.fillText(ag.essence||'', W/2, H/2+36);
+    cx.shadowBlur=0;
+  }
+}
+
+function clearField(){ agents=[]; setStatus('поле очищено'); }
+
+// ═══════════════════════════════════════════════════════
+// BACKGROUND LERP
+// ═══════════════════════════════════════════════════════
+function lerpBg(){
+  const speed=0.04;
+  fieldBg.r+=(fieldBgTarget.r-fieldBg.r)*speed;
+  fieldBg.g+=(fieldBgTarget.g-fieldBg.g)*speed;
+  fieldBg.b+=(fieldBgTarget.b-fieldBg.b)*speed;
+  document.body.style.background=`rgb(${Math.round(fieldBg.r)},${Math.round(fieldBg.g)},${Math.round(fieldBg.b)})`;
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════
+function loop(ts){
+  frame++; T=ts*0.001;
+
+  lerpBg();
+
+  // Fade
+  const {r,g,b}=fieldBg;
+  cx.fillStyle=`rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.14)`;
+  cx.fillRect(0,0,W,H);
+
+  // Глобальный глитч
+  if(glitchTimer>0){
+    glitchTimer--;
+    if(Math.random()<0.4 && H>10){
+      const y=Math.random()*(H-10);
+      try{const img=cx.getImageData(0,Math.floor(y),W,8);cx.putImageData(img,(Math.random()-0.5)*60,y);}catch(e){}
+      cx.fillStyle=`rgba(255,0,80,0.08)`; cx.fillRect(0,y,W,8);
+    }
+  }
+
+  updateAgents();
+  drawAgents();
+
+  // Пустое поле
+  if(agents.length===0){
+    cx.font='11px "Share Tech Mono"'; cx.textAlign='center';
+    cx.fillStyle='rgba(0,255,231,0.08)';
+    cx.fillText('бросай смысл — или команду', W/2, H/2-10);
+    cx.fillStyle='rgba(0,255,231,0.04)';
+    cx.fillText('зелёный · белый · глитч · волна · огонь · поле', W/2, H/2+14);
+  }
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ═══════════════════════════════════════════════════════
+// SESSION UI
+// ═══════════════════════════════════════════════════════
+let sessionNames=[];
+function renderSessionList(names){
+  sessionNames=names;
+  const el=document.getElementById('session-list');
+  el.innerHTML='';
+  if(!names.length){el.innerHTML='<div style="font-size:10px;color:rgba(0,255,231,0.25);letter-spacing:0.2em">сессий нет</div>';return;}
+  for(const n of names){
+    const d=document.createElement('div');
+    d.className='sess-item'; d.textContent=n;
+    d.onclick=()=>{ wsSend({type:'load_session',name:n}); closePanel(); };
+    el.appendChild(d);
+  }
+}
+function openPanel(){ document.getElementById('spanel').classList.add('open'); }
+function closePanel(){ document.getElementById('spanel').classList.remove('open'); }
+function saveSession(){
+  const name=document.getElementById('sess-name-input').value.trim();
+  if(!name){setStatus('⚠ введи имя сессии');return;}
+  const agData=agents.map(a=>({word:a.word,archetypes:a.archetypes,essence:a.essence,x:a.x/W,y:a.y/H}));
+  wsSend({type:'save_session',name,agents:agData,bg:fieldBg});
+  document.getElementById('sess-name-input').value='';
+  closePanel();
+}
+function loadStateFromServer(state){
+  agents=[];
+  for(const a of (state.agents||[])){
+    const cls={archetypes:a.archetypes,essence:a.essence,x:a.x,y:a.y};
+    agents.push(createAgent(a.word,cls));
+  }
+  if(state.bg) fieldBgTarget=state.bg;
+}
+function syncFromRemote(state){
+  // мягкая синхронизация — только добавляем если нет
+  for(const a of (state.agents||[])){
+    if(!agents.find(ag=>ag.word===a.word)){
+      agents.push(createAgent(a.word,{archetypes:a.archetypes,essence:a.essence,x:a.x,y:a.y}));
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════════════════════
+const wi=document.getElementById('wi');
+const btn=document.getElementById('btn');
+const loading=document.getElementById('loading');
+const lw=document.getElementById('lw');
+
+function setStatus(t){ document.getElementById('sl').textContent=t; }
+
+async function submit(){
+  const word=wi.value.trim(); if(!word) return;
+  wi.value=''; btn.disabled=true;
+
+  // Сначала проверяем — это команда поля?
+  const cmd = parseCommand(word);
+  if(cmd){
+    applyCommand(cmd.cmd, cmd.value);
+    // Синхронизируем команду через WebSocket
+    wsSend({type:'field_command', cmd:cmd.cmd, value:cmd.value});
+    setStatus(`команда: ${word}`);
+    btn.disabled=false; wi.focus(); return;
+  }
+
+  // Иначе — семантический агент
+  lw.textContent=word.toUpperCase();
+  loading.style.opacity='1';
+  setStatus('LIRA читает «'+word+'»...');
+  try{
+    const cls=await classifyWord(word,agents);
+    if(agents.length>=8) agents.shift();
+    const ag=createAgent(word,cls);
+    agents.push(ag);
+    // Синхронизация
+    wsSend({type:'field_update', state:{agents:agents.map(a=>({word:a.word,archetypes:a.archetypes,essence:a.essence,x:a.x/W,y:a.y/H}))}});
+    setStatus(`«${word}» · ${cls.archetypes.join('+')} · ${cls.essence}`);
+  }catch(e){
+    setStatus('ошибка: '+e.message.slice(0,50));
+  }
+  loading.style.opacity='0'; btn.disabled=false; wi.focus();
+}
+
+btn.addEventListener('click',submit);
+wi.addEventListener('keydown',e=>{ if(e.key==='Enter') submit(); });
+</script>
+</body>
+</html>
