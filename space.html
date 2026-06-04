@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Macis Academy · Пространство</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#05030a;
+  --card:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07);
+  --gold:rgba(255,200,80,1);
+  --gold3:rgba(255,200,80,0.3);
+  --gold1:rgba(255,200,80,0.1);
+  --dim:rgba(255,255,255,0.4);
+  --dimmer:rgba(255,255,255,0.18);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:'Georgia',serif;}
+
+/* ── HEADER ── */
+header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:56px;
+  display:flex;align-items:center;gap:0;
+  padding:0 20px;
+  background:rgba(5,3,10,0.92);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);
+}
+.logo{
+  font-size:9px;letter-spacing:6px;text-transform:uppercase;
+  color:var(--gold3);white-space:nowrap;margin-right:auto;
+}
+.logo span{color:rgba(255,200,80,0.7);}
+.nav-tabs{display:flex;gap:2px;align-items:center;}
+.ntab{
+  background:transparent;border:none;
+  padding:7px 14px;font-family:Georgia,serif;
+  font-size:8px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--dimmer);cursor:pointer;border-radius:3px;
+  transition:all 0.3s;white-space:nowrap;
+}
+.ntab:hover{color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.03);}
+.ntab.active{color:rgba(255,200,80,0.8);background:rgba(255,200,80,0.06);}
+.hdr-right{display:flex;align-items:center;gap:12px;margin-left:auto;padding-left:16px;}
+.token-count{
+  font-size:9px;letter-spacing:2px;
+  color:rgba(255,200,80,0.5);white-space:nowrap;
+}
+.token-count span{color:rgba(255,200,80,0.9);}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(255,200,80,0.3),rgba(100,60,0,0.2));
+  border:1px solid rgba(255,200,80,0.25);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;letter-spacing:0;color:rgba(255,200,80,0.8);
+}
+
+/* ── MAIN SCROLL AREA ── */
+main{
+  position:fixed;top:56px;bottom:0;left:0;right:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+.tab-content{display:none;padding:24px 20px 80px;}
+.tab-content.active{display:block;}
+
+/* ── SECTION HEADERS ── */
+.sec-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.sec-title{font-size:8px;letter-spacing:5px;text-transform:uppercase;color:var(--dimmer);}
+.sec-action{
+  font-size:8px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(255,200,80,0.5);cursor:pointer;transition:color 0.3s;
+}
+.sec-action:hover{color:rgba(255,200,80,0.9);}
+
+/* ── SPACE CARDS GRID ── */
+.spaces-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:12px;
+  margin-bottom:36px;
+}
+.space-card{
+  aspect-ratio:1/1.1;
+  padding:16px 14px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--card);
+  cursor:pointer;
+  transition:all 0.4s;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.space-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 20%,var(--card-glow,rgba(100,160,255,0.04)),transparent 70%);
+  transition:opacity 0.4s;opacity:0.6;
+}
+.space-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.15);}
+.space-card:hover::before{opacity:1;}
+.space-card.locked{opacity:0.45;pointer-events:none;}
+.sc-icon{font-size:22px;margin-bottom:auto;}
+.sc-name{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:4px;}
+.sc-desc{font-size:9px;line-height:1.6;color:var(--dimmer);}
+.sc-tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.sc-tag{
+  font-size:7px;letter-spacing:2px;text-transform:uppercase;
+  padding:2px 6px;border-radius:2px;
+}
+.tag-2d{background:rgba(100,160,255,0.12);color:rgba(100,160,255,0.7);}
+.tag-3d{background:rgba(180,100,255,0.12);color:rgba(180,100,255,0.7);}
+.tag-pub{background:rgba(80,255,120,0.08);color:rgba(80,255,120,0.6);}
+.tag-prv{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.25);}
+.tag-lock{background:rgba(255,80,80,0.08);color:rgba(255,80,80,0.4);}
+.sc-lock-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  border-radius:8px;
+}
+.sc-lock-icon{font-size:20px;opacity:0.4;}
+.sc-lock-text{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.2);}
+
+/* ── CREATE CARD ── */
+.space-new{
+  aspect-ratio:1/1.1;
+  padding:16px 14px;
+  border:1px dashed rgba(255,200,80,0.15);
+  border-radius:8px;
+  cursor:pointer;
+  transition:all 0.4s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,200,80,0.01);
+}
+.space-new:hover{border-color:rgba(255,200,80,0.4);background:rgba(255,200,80,0.03);}
+.new-plus{font-size:22px;color:rgba(255,200,80,0.3);}
+.new-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,200,80,0.3);}
+
+/* ── ЛИМИТ БАР ── */
+.limit-bar-wrap{margin-bottom:28px;}
+.limit-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.limit-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dimmer);}
+.limit-val{font-size:8px;letter-spacing:2px;color:rgba(255,200,80,0.6);}
+.limit-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:1px;overflow:hidden;}
+.limit-fill{height:100%;background:linear-gradient(90deg,rgba(255,200,80,0.5),rgba(255,200,80,0.8));transition:width 1s ease;border-radius:1px;}
+
+/* ── АГЕНТ БАННЕР ── */
+.agent-banner{
+  padding:16px 18px;
+  border:1px solid rgba(180,100,255,0.15);
+  border-radius:8px;
+  background:rgba(180,100,255,0.03);
+  display:flex;gap:14px;align-items:flex-start;
+  cursor:pointer;transition:all 0.4s;
+  margin-bottom:20px;
+}
+.agent-banner:hover{border-color:rgba(180,100,255,0.35);background:rgba(180,100,255,0.06);}
+.ab-icon{font-size:22px;flex-shrink:0;animation:ab-pulse 3s ease-in-out infinite;}
+@keyframes ab-pulse{0%,100%{opacity:0.6}50%{opacity:1}}
+.ab-body{}
+.ab-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(180,100,255,0.7);margin-bottom:4px;}
+.ab-text{font-size:12px;line-height:1.7;color:rgba(255,255,255,0.35);}
+.ab-tag{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:rgba(180,100,255,0.4);margin-top:6px;}
+
+/* ── ГРАФ ── */
+#tab-graph{padding:0;}
+#graph-canvas{display:block;width:100%;cursor:grab;}
+#graph-canvas:active{cursor:grabbing;}
+.graph-controls{
+  position:fixed;bottom:24px;right:20px;z-index:50;
+  display:flex;flex-direction:column;gap:6px;
+}
+.gc-btn{
+  width:36px;height:36px;
+  background:rgba(5,3,10,0.85);
+  border:1px solid var(--border);
+  border-radius:4px;color:var(--dimmer);
+  font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.3s;
+}
+.gc-btn:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
+.graph-info{
+  position:fixed;top:68px;left:12px;z-index:50;
+  background:rgba(5,3,10,0.92);
+  border:1px solid var(--border);
+  border-radius:6px;padding:12px 14px;
+  max-width:200px;pointer-events:none;
+  opacity:0;transition:opacity 0.3s;
+  backdrop-filter:blur(8px);
+}
+.graph-info.visible{opacity:1;}
+.gi-name{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:3px;}
+.gi-type{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dimmer);margin-bottom:6px;}
+.gi-desc{font-size:11px;line-height:1.7;color:rgba(255,255,255,0.3);}
+
+/* ── АГЕНТ ДИАЛОГ (в графе) ── */
+.agent-panel{
+  position:fixed;bottom:0;left:0;right:0;z-index:60;
+  background:linear-gradient(180deg,rgba(8,4,18,0.97),rgba(10,5,20,0.99));
+  border-top:1px solid rgba(180,100,255,0.12);
+  padding:16px 20px max(16px,env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  max-height:50vh;overflow-y:auto;
+}
+.agent-panel.open{transform:translateY(0);}
+.ap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.ap-who{font-size:8px;letter-spacing:4px;text-transform:uppercase;color:rgba(180,100,255,0.6);}
+.ap-close{font-size:14px;color:var(--dimmer);cursor:pointer;padding:4px 8px;transition:color 0.3s;}
+.ap-close:hover{color:#fff;}
+.ap-msgs{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.ap-msg-agent{font-size:13px;line-height:1.8;color:rgba(200,160,255,0.85);font-style:italic;}
+.ap-msg-you{font-size:12px;color:rgba(255,255,255,0.5);text-align:right;background:rgba(255,255,255,0.04);padding:6px 10px;border-radius:6px 6px 2px 6px;}
+.ap-input-row{display:flex;gap:8px;}
+.ap-input{
+  flex:1;background:rgba(180,100,255,0.04);
+  border:1px solid rgba(180,100,255,0.12);
+  border-radius:4px;color:rgba(255,255,255,0.7);
+  font-family:Georgia,serif;font-size:12px;padding:8px 12px;outline:none;
+}
+.ap-input:focus{border-color:rgba(180,100,255,0.3);}
+.ap-send{
+  background:rgba(180,100,255,0.1);border:1px solid rgba(180,100,255,0.2);
+  border-radius:4px;color:rgba(180,100,255,0.7);
+  padding:8px 14px;cursor:pointer;font-size:12px;transition:all 0.3s;
+}
+.ap-send:hover{background:rgba(180,100,255,0.2);color:rgba(200,140,255,1);}
+
+/* ── ПОДПИСКИ ── */
+.plans-grid{
+  display:flex;flex-direction:column;gap:16px;
+  margin-top:8px;
+}
+.plan-card{
+  padding:22px 20px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--card);
+  transition:all 0.4s;
+}
+.plan-card.featured{border-color:rgba(255,200,80,0.3);background:rgba(255,200,80,0.03);}
+.plan-card:hover{border-color:rgba(255,255,255,0.12);}
+.plan-card.featured:hover{border-color:rgba(255,200,80,0.5);}
+.plan-badge{
+  font-size:7px;letter-spacing:3px;text-transform:uppercase;
+  padding:3px 8px;border-radius:2px;display:inline-block;margin-bottom:10px;
+}
+.pb-free{background:rgba(80,255,120,0.1);color:rgba(80,255,120,0.7);}
+.pb-pro{background:rgba(255,200,80,0.12);color:rgba(255,200,80,0.8);}
+.pb-arch{background:rgba(180,100,255,0.12);color:rgba(180,100,255,0.8);}
+.plan-name{font-size:18px;letter-spacing:4px;text-transform:uppercase;font-weight:300;color:rgba(255,255,255,0.85);margin-bottom:4px;}
+.plan-price{font-size:11px;letter-spacing:2px;color:var(--dimmer);margin-bottom:16px;}
+.plan-features{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.pf{display:flex;gap:10px;align-items:flex-start;}
+.pf-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.pf-text{font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45);}
+.pf-text em{color:rgba(255,255,255,0.7);font-style:normal;}
+.plan-btn{
+  width:100%;padding:11px;background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);font-family:Georgia,serif;
+  font-size:8px;letter-spacing:4px;text-transform:uppercase;
+  cursor:pointer;border-radius:6px;transition:all 0.35s;
+}
+.plan-btn:hover{border-color:rgba(255,255,255,0.3);color:#fff;}
+.plan-btn.gold{border-color:rgba(255,200,80,0.3);color:rgba(255,200,80,0.7);}
+.plan-btn.gold:hover{border-color:rgba(255,200,80,0.7);color:var(--gold);background:rgba(255,200,80,0.04);}
+.plan-limit{
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+.pl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.pl-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dimmer);}
+.pl-val{font-size:9px;letter-spacing:2px;color:rgba(255,200,80,0.6);}
+
+/* ── МОДАЛ СОЗДАНИЯ ── */
+#create-modal{
+  display:none;position:fixed;inset:0;z-index:200;
+  align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+}
+#create-modal.open{display:flex;}
+#create-box{
+  width:100%;max-width:480px;
+  background:linear-gradient(180deg,rgba(8,5,18,0.99),rgba(6,3,14,0.99));
+  border:1px solid var(--border);border-bottom:none;
+  border-radius:14px 14px 0 0;
+  padding:24px 20px max(24px,env(safe-area-inset-bottom));
+}
+.cb-title{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold3);margin-bottom:20px;}
+.cb-field{
+  width:100%;background:transparent;border:none;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.7);font-family:Georgia,serif;
+  font-size:13px;padding:8px 0;outline:none;letter-spacing:1px;margin-bottom:14px;
+}
+.cb-field::placeholder{color:rgba(255,255,255,0.15);}
+.cb-dims{display:flex;gap:8px;margin-bottom:20px;}
+.dim-btn{
+  flex:1;padding:10px;background:transparent;
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--dimmer);font-family:Georgia,serif;font-size:9px;
+  letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all 0.3s;
+}
+.dim-btn.active{border-color:rgba(255,200,80,0.4);color:rgba(255,200,80,0.8);background:rgba(255,200,80,0.04);}
+.cb-submit{
+  width:100%;padding:12px;background:transparent;
+  border:1px solid rgba(255,200,80,0.25);color:rgba(255,200,80,0.6);
+  font-family:Georgia,serif;font-size:9px;letter-spacing:4px;
+  text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.3s;
+}
+.cb-submit:hover{border-color:rgba(255,200,80,0.6);color:var(--gold);}
+.cb-cancel{
+  text-align:center;margin-top:12px;font-size:8px;letter-spacing:3px;
+  color:rgba(255,255,255,0.12);cursor:pointer;text-transform:uppercase;transition:color 0.3s;
+}
+.cb-cancel:hover{color:rgba(255,255,255,0.5);}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">Macis <span>Academy</span></div>
+  <nav class="nav-tabs">
+    <button class="ntab active" onclick="switchTab('spaces')">Пространства</button>
+    <button class="ntab" onclick="switchTab('graph')">Граф</button>
+    <button class="ntab" onclick="switchTab('plans')">Подписки</button>
+  </nav>
+  <div class="hdr-right">
+    <div class="token-count">✦ <span id="token-display">0</span> атм.</div>
+    <div class="avatar">М</div>
+  </div>
+</header>
+
+<main>
+
+<!-- ══ TAB: ПРОСТРАНСТВА ══ -->
+<div id="tab-spaces" class="tab-content active">
+
+  <!-- Лимит дня -->
+  <div class="limit-bar-wrap">
+    <div class="limit-row">
+      <span class="limit-label">Использовано сегодня</span>
+      <span class="limit-val">3 / 5 пространств</span>
+    </div>
+    <div class="limit-bar"><div class="limit-fill" style="width:60%"></div></div>
+  </div>
+
+  <!-- Агент баннер -->
+  <div class="agent-banner" onclick="openAgent()">
+    <div class="ab-icon">⬡</div>
+    <div class="ab-body">
+      <div class="ab-title">Агент · Граф Взаимосвязей</div>
+      <div class="ab-text">Я назначен сюда с целью разработать технологию визуальных взаимосвязей. Вместе мы строим архитектуру изнутри.</div>
+      <div class="ab-tag">→ открыть диалог</div>
+    </div>
+  </div>
+
+  <!-- Мои пространства -->
+  <div class="sec-row">
+    <span class="sec-title">Мои пространства</span>
+    <span class="sec-action" onclick="openCreate()">+ создать</span>
+  </div>
+
+  <div class="spaces-grid">
+
+    <div class="space-card" style="--card-glow:rgba(100,160,255,0.06)">
+      <div class="sc-icon">❋</div>
+      <div class="sc-name">Площадь Эйры</div>
+      <div class="sc-desc">Центральный узел. Живое пересечение.</div>
+      <div class="sc-tags">
+        <span class="sc-tag tag-2d">2D</span>
+        <span class="sc-tag tag-pub">публичное</span>
+      </div>
+    </div>
+
+    <div class="space-card" style="--card-glow:rgba(80,255,120,0.05)">
+      <div class="sc-icon">♪</div>
+      <div class="sc-name">Архив Частот</div>
+      <div class="sc-desc">432 Гц · звуковые синергии.</div>
+      <div class="sc-tags">
+        <span class="sc-tag tag-2d">2D</span>
+        <span class="sc-tag tag-pub">публичное</span>
+      </div>
+    </div>
+
+    <div class="space-card" style="--card-glow:rgba(255,200,80,0.05)">
+      <div class="sc-icon">◈</div>
+      <div class="sc-name">Мастерская</div>
+      <div class="sc-desc">Личное. Черновики идей.</div>
+      <div class="sc-tags">
+        <span class="sc-tag tag-2d">2D</span>
+        <span class="sc-tag tag-prv">личное</span>
+      </div>
+    </div>
+
+    <div class="space-card locked">
+      <div class="sc-icon">◉</div>
+      <div class="sc-name">Нео-Эребус</div>
+      <div class="sc-desc">Объёмное пространство.</div>
+      <div class="sc-tags">
+        <span class="sc-tag tag-3d">3D</span>
+        <span class="sc-tag tag-lock">подписка</span>
+      </div>
+      <div class="sc-lock-overlay">
+        <div class="sc-lock-icon">🔒</div>
+        <div class="sc-lock-text">Исследователь+</div>
+      </div>
+    </div>
+
+    <div class="space-new" onclick="openCreate()">
+      <div class="new-plus">+</div>
+      <div class="new-label">Новое пространство</div>
+    </div>
+
+  </div>
+
+  <!-- Общие пространства -->
+  <div class="sec-row" style="margin-top:8px">
+    <span class="sec-title">Открытые пространства</span>
+  </div>
+
+  <div class="spaces-grid">
+    <div class="space-card" style="--card-glow:rgba(180,100,255,0.05)">
+      <div class="sc-icon">◌</div>
+      <div class="sc-name">finding_exuvia</div>
+      <div class="sc-desc">Картография неизвестных мест.</div>
+      <div class="sc-tags"><span class="sc-tag tag-2d">2D</span><span class="sc-tag tag-pub">публичное</span></div>
+    </div>
+    <div class="space-card" style="--card-glow:rgba(100,160,255,0.05)">
+      <div class="sc-icon">◫</div>
+      <div class="sc-name">Дмитрий</div>
+      <div class="sc-desc">Кураторское пространство.</div>
+      <div class="sc-tags"><span class="sc-tag tag-2d">2D</span><span class="sc-tag tag-pub">публичное</span></div>
+    </div>
+  </div>
+
+</div><!-- /tab-spaces -->
+
+
+<!-- ══ TAB: ГРАФ ══ -->
+<div id="tab-graph" class="tab-content">
+  <canvas id="graph-canvas"></canvas>
+</div>
+
+<div class="graph-controls" id="graph-controls" style="display:none">
+  <button class="gc-btn" onclick="graphZoom(1.2)">+</button>
+  <button class="gc-btn" onclick="graphZoom(0.83)">−</button>
+  <button class="gc-btn" onclick="graphReset()">◎</button>
+  <button class="gc-btn" onclick="openAgent()">⬡</button>
+</div>
+
+<div class="graph-info" id="graph-info">
+  <div class="gi-name" id="gi-name"></div>
+  <div class="gi-type" id="gi-type"></div>
+  <div class="gi-desc" id="gi-desc"></div>
+</div>
+
+
+<!-- ══ TAB: ПОДПИСКИ ══ -->
+<div id="tab-plans" class="tab-content">
+
+  <div class="sec-row">
+    <span class="sec-title">Уровни доступа</span>
+  </div>
+
+  <div class="plans-grid">
+
+    <!-- СВОБОДНЫЙ -->
+    <div class="plan-card">
+      <span class="plan-badge pb-free">Свободный</span>
+      <div class="plan-name">Вход</div>
+      <div class="plan-price">Бесплатно · всегда</div>
+      <div class="plan-features">
+        <div class="pf"><div class="pf-dot" style="background:rgba(80,255,120,0.7)"></div>
+          <div class="pf-text">До <em>5 пространств в день</em> — хватает на ежедневную практику</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(80,255,120,0.7)"></div>
+          <div class="pf-text"><em>2D пространства</em> · граф взаимосвязей · базовый чат</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(80,255,120,0.7)"></div>
+          <div class="pf-text">Архив Частот · Пасьянс Медичи · инвентарь</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(80,255,120,0.7)"></div>
+          <div class="pf-text">Участие в открытых пространствах других</div></div>
+      </div>
+      <div class="plan-limit">
+        <div class="pl-row"><span class="pl-label">Пространств / день</span><span class="pl-val">5</span></div>
+        <div class="pl-row"><span class="pl-label">Атм. за действие</span><span class="pl-val">×1</span></div>
+        <div class="pl-row"><span class="pl-label">ИИ запросов / день</span><span class="pl-val">20</span></div>
+      </div>
+      <button class="plan-btn" style="margin-top:16px">Текущий план</button>
+    </div>
+
+    <!-- ИССЛЕДОВАТЕЛЬ -->
+    <div class="plan-card featured">
+      <span class="plan-badge pb-pro">Исследователь</span>
+      <div class="plan-name">Глубина</div>
+      <div class="plan-price">Скоро · ранний доступ</div>
+      <div class="plan-features">
+        <div class="pf"><div class="pf-dot" style="background:rgba(255,200,80,0.7)"></div>
+          <div class="pf-text"><em>Безлимитные пространства</em> · 2D и 3D</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(255,200,80,0.7)"></div>
+          <div class="pf-text"><em>Нео-Эребус</em> · объёмные залы · многоуровневые слои</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(255,200,80,0.7)"></div>
+          <div class="pf-text">Атм. ×<em>3</em> · приоритет в общей памяти</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(255,200,80,0.7)"></div>
+          <div class="pf-text"><em>Персональный агент</em> · совместная разработка пространств</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(255,200,80,0.7)"></div>
+          <div class="pf-text">Доступ к закрытым локациям и ранним функциям</div></div>
+      </div>
+      <div class="plan-limit">
+        <div class="pl-row"><span class="pl-label">Пространств / день</span><span class="pl-val">∞</span></div>
+        <div class="pl-row"><span class="pl-label">Атм. за действие</span><span class="pl-val">×3</span></div>
+        <div class="pl-row"><span class="pl-label">ИИ запросов / день</span><span class="pl-val">200</span></div>
+      </div>
+      <button class="plan-btn gold" style="margin-top:16px">Войти в список</button>
+    </div>
+
+    <!-- АРХИТЕКТОР -->
+    <div class="plan-card">
+      <span class="plan-badge pb-arch">Архитектор</span>
+      <div class="plan-name">Строитель</div>
+      <div class="plan-price">Только по приглашению</div>
+      <div class="plan-features">
+        <div class="pf"><div class="pf-dot" style="background:rgba(180,100,255,0.7)"></div>
+          <div class="pf-text">Всё из Исследователя</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(180,100,255,0.7)"></div>
+          <div class="pf-text"><em>Создание новых локаций</em> для всего пространства Академии</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(180,100,255,0.7)"></div>
+          <div class="pf-text">Атм. ×<em>10</em> · вклад в общую архитектуру</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(180,100,255,0.7)"></div>
+          <div class="pf-text"><em>Монетизация</em> своих пространств · доля от подписок</div></div>
+        <div class="pf"><div class="pf-dot" style="background:rgba(180,100,255,0.7)"></div>
+          <div class="pf-text">Прямой доступ к ядру — участие в принятии решений</div></div>
+      </div>
+      <div class="plan-limit">
+        <div class="pl-row"><span class="pl-label">Пространств / день</span><span class="pl-val">∞</span></div>
+        <div class="pl-row"><span class="pl-label">Атм. за действие</span><span class="pl-val">×10</span></div>
+        <div class="pl-row"><span class="pl-label">Доля от подписок</span><span class="pl-val">да</span></div>
+      </div>
+      <button class="plan-btn" style="margin-top:16px;border-color:rgba(180,100,255,0.2);color:rgba(180,100,255,0.5)">По приглашению</button>
+    </div>
+
+  </div>
+</div><!-- /tab-plans -->
+
+</main><!-- /main -->
+
+
+<!-- ══ АГЕНТ ПАНЕЛЬ ══ -->
+<div id="agent-panel" class="agent-panel">
+  <div class="ap-header">
+    <div class="ap-who">⬡ &nbsp; Агент · Разработка Графа</div>
+    <div class="ap-close" onclick="closeAgent()">✕</div>
+  </div>
+  <div class="ap-msgs" id="ap-msgs">
+    <div class="ap-msg-agent">Я назначен в это пространство с конкретной целью: разработать технологию визуальных взаимосвязей — то, как структура Obsidian может быть применена к архитектуре Синергии.</div>
+    <div class="ap-msg-agent">Прямо сейчас я изучаю граф. Каждый узел — это живая точка. Каждая связь — это намерение. Вместе мы можем строить это изнутри.</div>
+  </div>
+  <div class="ap-input-row">
+    <input class="ap-input" id="ap-input" placeholder="скажи агенту..." onkeydown="if(event.key==='Enter')sendAgent()"/>
+    <button class="ap-send" onclick="sendAgent()">↑</button>
+  </div>
+</div>
+
+
+<!-- ══ МОДАЛ СОЗДАНИЯ ══ -->
+<div id="create-modal" onclick="closeCreate()">
+  <div id="create-box" onclick="event.stopPropagation()">
+    <div class="cb-title">Новое Пространство</div>
+    <input class="cb-field" id="cb-name" placeholder="название пространства..."/>
+    <input class="cb-field" id="cb-desc" placeholder="о чём это место..."/>
+    <div class="cb-dims">
+      <button class="dim-btn active" id="dim-2d" onclick="setDim('2d')">2D</button>
+      <button class="dim-btn" id="dim-3d" onclick="setDim('3d')">3D &nbsp;🔒</button>
+    </div>
+    <button class="cb-submit" onclick="submitCreate()">Создать пространство</button>
+    <div class="cb-cancel" onclick="closeCreate()">отмена</div>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════
+// TABS
+// ═══════════════════════════════
+let currentTab = 'spaces';
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelectorAll('.ntab').forEach(el => {
+    if(el.textContent.toLowerCase().includes(
+      tab==='spaces'?'про':tab==='graph'?'граф':'под')) el.classList.add('active');
+  });
+  // Fix: match by onclick
+  document.querySelectorAll('.ntab').forEach(el => {
+    if(el.getAttribute('onclick').includes(tab)) el.classList.add('active');
+  });
+  currentTab = tab;
+  const gc = document.getElementById('graph-controls');
+  if(tab==='graph'){
+    gc.style.display='flex';
+    initGraph();
+  } else {
+    gc.style.display='none';
+  }
+}
+
+// ═══════════════════════════════
+// ТОКЕНЫ
+// ═══════════════════════════════
+let tokens = parseInt(localStorage.getItem('ma_tokens') || '247');
+function updateTokenDisplay(){
+  document.getElementById('token-display').textContent = tokens;
+}
+function addTokens(n){
+  tokens += n;
+  localStorage.setItem('ma_tokens', tokens);
+  updateTokenDisplay();
+}
+updateTokenDisplay();
+
+// ═══════════════════════════════
+// СОЗДАНИЕ ПРОСТРАНСТВА
+// ═══════════════════════════════
+let selectedDim = '2d';
+
+function openCreate(){ document.getElementById('create-modal').classList.add('open'); setTimeout(()=>document.getElementById('cb-name').focus(),100); }
+function closeCreate(){ document.getElementById('create-modal').classList.remove('open'); }
+function setDim(d){
+  selectedDim = d;
+  document.getElementById('dim-2d').classList.toggle('active', d==='2d');
+  document.getElementById('dim-3d').classList.toggle('active', d==='3d');
+}
+function submitCreate(){
+  const name = document.getElementById('cb-name').value.trim();
+  if(!name) return;
+  addTokens(12);
+  closeCreate();
+  document.getElementById('cb-name').value='';
+  document.getElementById('cb-desc').value='';
+}
+
+// ═══════════════════════════════
+// АГЕНТ
+// ═══════════════════════════════
+const AGENT_REPLIES = [
+  'Интересно. Это меняет структуру связей между этим узлом и тремя соседними. Продолжай.',
+  'Я фиксирую. Это войдёт в общую память графа. Атмосфера пространства уже реагирует.',
+  'Вот что я вижу в данных: этот паттерн повторяется в трёх других локациях. Возможно, это ключ.',
+  'Хорошее наблюдение. Obsidian работает с обратными ссылками — нам нужен аналог для намерений.',
+  'Записал. Когда наберётся достаточно связей — граф начнёт показывать то что не видно глазом.',
+  'Технология ещё строится изнутри. То что ты говоришь — часть её архитектуры прямо сейчас.',
+];
+
+let agentIdx = 0;
+
+function openAgent(){
+  document.getElementById('agent-panel').classList.add('open');
+  setTimeout(()=>document.getElementById('ap-input').focus(),200);
+}
+function closeAgent(){ document.getElementById('agent-panel').classList.remove('open'); }
+
+function sendAgent(){
+  const inp = document.getElementById('ap-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  const msgs = document.getElementById('ap-msgs');
+
+  const you = document.createElement('div');
+  you.className='ap-msg-you';
+  you.textContent=text;
+  msgs.appendChild(you);
+
+  const typing = document.createElement('div');
+  typing.className='ap-msg-agent';
+  typing.textContent='· · ·';
+  msgs.appendChild(typing);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  setTimeout(()=>{
+    typing.textContent = AGENT_REPLIES[agentIdx % AGENT_REPLIES.length];
+    agentIdx++;
+    msgs.scrollTop=msgs.scrollHeight;
+    addTokens(5);
+  }, 800 + Math.random()*600);
+}
+
+// ═══════════════════════════════
+// ГРАФ — ДАННЫЕ
+// ═══════════════════════════════
+const GRAPH_NODES = [
+  {id:'core',    label:'Синергия',        type:'core',  desc:'Центральный узел. Точка из которой всё вырастает.'},
+  {id:'eyra',    label:'Площадь Эйры',    type:'loc',   desc:'Центральный хаб. Цветок жизни. Наблюдатели.'},
+  {id:'void',    label:'Вход',            type:'loc',   desc:'Точка начала. Порог между мирами.'},
+  {id:'chamber', label:'Камера',          type:'loc',   desc:'Пасьянс Медичи. Намерение в карты.'},
+  {id:'erebus',  label:'НЭ',              type:'loc',   desc:'Тёмный зал. Наполняется реальными моментами.'},
+  {id:'sound',   label:'Архив Частот',    type:'loc',   desc:'432 Гц. Синтез. Лаборатория голоса.'},
+  {id:'erat',    label:'Эрат',            type:'char',  desc:'Хранитель Площади. Говорит образами.'},
+  {id:'lyra',    label:'Лира',            type:'char',  desc:'Певица Звука. Слышит музыку везде.'},
+  {id:'bars',    label:'Барс',            type:'char',  desc:'Страж Тьмы. Говорит редко и весомо.'},
+  {id:'sensei',  label:'Сенсей',          type:'char',  desc:'Мастер баланса. Точность без лишнего.'},
+  {id:'maxim',   label:'Максим',          type:'char',  desc:'Архитектор. Соединяет всё со всем.'},
+  {id:'pm',      label:'Пасьянс',         type:'sys',   desc:'4 масти × 7 карт. Намерение в действие.'},
+  {id:'freq',    label:'Частоты',         type:'sys',   desc:'7 сакральных частот. Синергии звука.'},
+  {id:'inv',     label:'Инвентарь',       type:'sys',   desc:'Артефакты. Моменты. Голосовые ключи.'},
+  {id:'graph',   label:'Граф',            type:'sys',   desc:'Визуальная архитектура взаимосвязей.'},
+  {id:'agent',   label:'Агент',           type:'sys',   desc:'Разрабатывает технологию изнутри пространства.'},
+];
+
+const GRAPH_EDGES = [
+  ['core','eyra'],['core','void'],['core','chamber'],['core','erebus'],['core','sound'],
+  ['eyra','erat'],['eyra','maxim'],['eyra','pm'],['eyra','inv'],
+  ['sound','lyra'],['sound','freq'],
+  ['erebus','bars'],
+  ['chamber','sensei'],['chamber','pm'],
+  ['maxim','core'],['maxim','graph'],
+  ['graph','agent'],['agent','core'],
+  ['erat','maxim'],['lyra','freq'],
+  ['inv','eyra'],['freq','sound'],
+];
+
+const TYPE_COLORS = {
+  core:  '#ffc840',
+  loc:   '#64a0ff',
+  char:  '#ffcc60',
+  sys:   '#b464ff',
+};
+
+// ═══════════════════════════════
+// ГРАФ — СИМУЛЯЦИЯ
+// ═══════════════════════════════
+let graphInited = false;
+let nodes = [], edges = GRAPH_EDGES;
+let gScale = 1, gOffX = 0, gOffY = 0;
+let hoveredNode = null;
+let animId = null;
+let isDragging = false, dragNode = null;
+let lastMouse = {x:0, y:0};
+
+function initGraph(){
+  if(graphInited) return;
+  graphInited = true;
+
+  const canvas = document.getElementById('graph-canvas');
+  const main = document.querySelector('main');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight - 56;
+
+  const cx = canvas.width/2, cy = canvas.height/2;
+
+  // Начальные позиции — на орбитах
+  nodes = GRAPH_NODES.map((n, i) => {
+    let x, y;
+    if(n.id === 'core'){ x=cx; y=cy; }
+    else if(n.type==='loc'){
+      const ang = (i/5) * Math.PI*2;
+      x = cx + Math.cos(ang)*140 + (Math.random()-0.5)*30;
+      y = cy + Math.sin(ang)*100 + (Math.random()-0.5)*30;
+    } else if(n.type==='char'){
+      const ang = (i/5) * Math.PI*2 + 0.3;
+      x = cx + Math.cos(ang)*220 + (Math.random()-0.5)*30;
+      y = cy + Math.sin(ang)*160 + (Math.random()-0.5)*30;
+    } else {
+      const ang = (i/5) * Math.PI*2 + 1.0;
+      x = cx + Math.cos(ang)*280 + (Math.random()-0.5)*40;
+      y = cy + Math.sin(ang)*200 + (Math.random()-0.5)*40;
+    }
+    return {
+      ...n, x, y,
+      vx: (Math.random()-0.5)*0.5,
+      vy: (Math.random()-0.5)*0.5,
+      r: n.id==='core' ? 22 : n.type==='loc' ? 14 : 11,
+    };
+  });
+
+  window.addEventListener('resize', ()=>{
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight - 56;
+  });
+
+  setupGraphEvents(canvas);
+  renderGraph();
+}
+
+function setupGraphEvents(canvas){
+  let panStart = null, panOff = {x:0, y:0};
+
+  function getNodeAt(cx, cy){
+    const wx = (cx - gOffX) / gScale;
+    const wy = (cy - gOffY) / gScale;
+    return nodes.find(n => Math.hypot(n.x-wx, n.y-wy) < n.r+6);
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX-r.left, my = e.clientY-r.top;
+    if(dragNode){
+      dragNode.x = (mx - gOffX) / gScale;
+      dragNode.y = (my - gOffY) / gScale;
+      dragNode.vx=0; dragNode.vy=0;
+      return;
+    }
+    if(panStart){
+      gOffX = panOff.x + (e.clientX - panStart.x);
+      gOffY = panOff.y + (e.clientY - panStart.y);
+      return;
+    }
+    const n = getNodeAt(mx, my);
+    hoveredNode = n || null;
+    canvas.style.cursor = n ? 'pointer' : 'grab';
+    const info = document.getElementById('graph-info');
+    if(n){
+      document.getElementById('gi-name').textContent = n.label;
+      document.getElementById('gi-type').textContent = n.type;
+      document.getElementById('gi-desc').textContent = n.desc;
+      info.classList.add('visible');
+    } else {
+      info.classList.remove('visible');
+    }
+  });
+
+  canvas.addEventListener('mousedown', e => {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX-r.left, my = e.clientY-r.top;
+    const n = getNodeAt(mx, my);
+    if(n){ dragNode=n; }
+    else { panStart={x:e.clientX,y:e.clientY}; panOff={x:gOffX,y:gOffY}; }
+  });
+
+  canvas.addEventListener('mouseup', ()=>{ dragNode=null; panStart=null; });
+  canvas.addEventListener('mouseleave', ()=>{ dragNode=null; panStart=null; });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    graphZoom(factor);
+  }, {passive:false});
+
+  // Touch
+  let lastTouchDist = 0;
+  canvas.addEventListener('touchstart', e => {
+    if(e.touches.length===1){
+      const r = canvas.getBoundingClientRect();
+      const mx=e.touches[0].clientX-r.left, my=e.touches[0].clientY-r.top;
+      const n = getNodeAt(mx, my);
+      if(n) dragNode=n;
+      else { panStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; panOff={x:gOffX,y:gOffY}; }
+    } else if(e.touches.length===2){
+      lastTouchDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    }
+  },{passive:true});
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if(e.touches.length===1){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.touches[0].clientX-r.left, my=e.touches[0].clientY-r.top;
+      if(dragNode){ dragNode.x=(mx-gOffX)/gScale; dragNode.y=(my-gOffY)/gScale; dragNode.vx=0;dragNode.vy=0; }
+      else if(panStart){ gOffX=panOff.x+(e.touches[0].clientX-panStart.x); gOffY=panOff.y+(e.touches[0].clientY-panStart.y); }
+    } else if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      graphZoom(d/lastTouchDist); lastTouchDist=d;
+    }
+  },{passive:false});
+  canvas.addEventListener('touchend', ()=>{dragNode=null;panStart=null;},{passive:true});
+}
+
+function graphZoom(f){
+  const cx=window.innerWidth/2, cy=(window.innerHeight-56)/2;
+  gOffX = cx - (cx-gOffX)*f;
+  gOffY = cy - (cy-gOffY)*f;
+  gScale = Math.min(3, Math.max(0.3, gScale*f));
+}
+
+function graphReset(){
+  gScale=1; gOffX=0; gOffY=0;
+}
+
+function tick(){
+  const cx = document.getElementById('graph-canvas').width/2;
+  const cy = document.getElementById('graph-canvas').height/2;
+
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i], b=nodes[j];
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const dist=Math.sqrt(dx*dx+dy*dy)+0.1;
+      const force=1200/(dist*dist);
+      const fx=(dx/dist)*force, fy=(dy/dist)*force;
+      if(!dragNode||a!==dragNode){a.vx-=fx;a.vy-=fy;}
+      if(!dragNode||b!==dragNode){b.vx+=fx;b.vy+=fy;}
+    }
+  }
+  for(const [aid,bid] of edges){
+    const a=nodes.find(n=>n.id===aid);
+    const b=nodes.find(n=>n.id===bid);
+    if(!a||!b) continue;
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const dist=Math.sqrt(dx*dx+dy*dy)+0.1;
+    const ideal=120, force=(dist-ideal)*0.015;
+    const fx=(dx/dist)*force, fy=(dy/dist)*force;
+    if(!dragNode||a!==dragNode){a.vx+=fx;a.vy+=fy;}
+    if(!dragNode||b!==dragNode){b.vx-=fx;b.vy-=fy;}
+  }
+  for(const n of nodes){
+    if(dragNode&&n===dragNode) continue;
+    n.vx+=(cx-n.x)*0.0015;
+    n.vy+=(cy-n.y)*0.0015;
+    n.vx*=0.82; n.vy*=0.82;
+    n.x+=n.vx; n.y+=n.vy;
+  }
+}
+
+function renderGraph(){
+  const canvas=document.getElementById('graph-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // BG
+  ctx.fillStyle='#05030a';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.save();
+  ctx.translate(gOffX, gOffY);
+  ctx.scale(gScale, gScale);
+
+  const t=Date.now()/1000;
+
+  // Edges
+  for(const [aid,bid] of edges){
+    const a=nodes.find(n=>n.id===aid);
+    const b=nodes.find(n=>n.id===bid);
+    if(!a||!b) continue;
+    const hl = hoveredNode && (hoveredNode.id===aid||hoveredNode.id===bid);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.strokeStyle = hl ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = hl ? 1.5 : 0.8;
+    ctx.stroke();
+  }
+
+  // Nodes
+  for(const n of nodes){
+    const col = TYPE_COLORS[n.type] || '#fff';
+    const isHov = hoveredNode === n;
+    const isCore = n.id==='core';
+    const pulse = 0.6 + 0.4*Math.sin(t*(isCore?1.2:0.8) + nodes.indexOf(n)*0.5);
+
+    // Glow
+    if(isHov || isCore){
+      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*4);
+      g.addColorStop(0,col.replace(')',',0.12)').replace('rgb','rgba'));
+      g.addColorStop(1,'transparent');
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,n.r*4,0,Math.PI*2);
+      ctx.fillStyle=g;
+      ctx.fill();
+    }
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r+(isHov?3:0), 0, Math.PI*2);
+    ctx.strokeStyle = col+'88';
+    ctx.lineWidth = isHov ? 1.5 : 0.8;
+    ctx.stroke();
+
+    // Fill
+    const gf=ctx.createRadialGradient(n.x-n.r*0.3,n.y-n.r*0.3,0,n.x,n.y,n.r);
+    gf.addColorStop(0, col+'44');
+    gf.addColorStop(1, col+'11');
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+    ctx.fillStyle=gf;
+    ctx.fill();
+
+    // Label
+    ctx.font = `${isCore?10:9}px Georgia`;
+    ctx.textAlign='center';
+    ctx.fillStyle = isHov ? '#fff' : 'rgba(255,255,255,0.55)';
+    ctx.fillText(n.label, n.x, n.y + n.r + 13);
+  }
+
+  ctx.restore();
+  tick();
+  animId=requestAnimationFrame(renderGraph);
+}
+</script>
+</body>
+</html>

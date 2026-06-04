@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macis Academy · Путеводитель</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --gold:    rgba(255,200,80,1);
+  --gold4:   rgba(255,200,80,0.4);
+  --gold1:   rgba(255,200,80,0.1);
+  --blue:    rgba(100,160,255,1);
+  --purple:  rgba(180,100,255,1);
+  --green:   rgba(80,255,120,1);
+  --dim:     rgba(255,255,255,0.35);
+  --locked:  rgba(255,255,255,0.12);
+}
+
+html { scroll-behavior:smooth; }
+
+body {
+  background:#060408;
+  font-family:'Georgia', serif;
+  color:#fff;
+  overflow-x:hidden;
+}
+
+/* ─── ЗВЁЗДЫ ─── */
+#stars {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(80,60,140,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(60,40,100,0.1)  0%, transparent 50%);
+}
+
+/* ─── ОБЩИЙ КОНТЕЙНЕР ─── */
+main {
+  position:relative; z-index:1;
+  max-width:560px;
+  margin:0 auto;
+  padding:0 20px 80px;
+}
+
+/* ─── СЕКЦИИ ─── */
+section {
+  padding:64px 0 0;
+}
+
+/* ─── МЕТКА СЕКЦИИ ─── */
+.sec-tag {
+  font-size:8px;
+  letter-spacing:6px;
+  text-transform:uppercase;
+  color:var(--gold4);
+  margin-bottom:20px;
+}
+
+/* ─── ТИПОГРАФИЯ ─── */
+h1 {
+  font-size:clamp(32px,8vw,52px);
+  letter-spacing:8px;
+  text-transform:uppercase;
+  font-weight:300;
+  line-height:1.2;
+  color:rgba(255,255,255,0.9);
+}
+
+h2 {
+  font-size:clamp(18px,5vw,26px);
+  letter-spacing:5px;
+  text-transform:uppercase;
+  font-weight:300;
+  color:rgba(255,255,255,0.8);
+  margin-bottom:20px;
+}
+
+p {
+  font-size:14px;
+  line-height:2.1;
+  color:var(--dim);
+  margin-bottom:14px;
+}
+
+em { color:var(--gold4); font-style:normal; }
+strong { color:rgba(255,255,255,0.75); font-weight:normal; }
+
+/* ─── HERO ─── */
+#hero {
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding-top:0;
+  padding-bottom:40px;
+}
+
+.hero-eyebrow {
+  font-size:9px;
+  letter-spacing:7px;
+  text-transform:uppercase;
+  color:var(--gold4);
+  margin-bottom:24px;
+  animation: fadeup 1s ease both 0.3s;
+}
+
+#hero h1 { animation: fadeup 1.1s ease both 0.6s; }
+
+.hero-sub {
+  margin-top:24px;
+  font-size:14px;
+  line-height:2;
+  color:var(--dim);
+  animation: fadeup 1.1s ease both 1s;
+}
+
+.hero-divider {
+  width:48px; height:1px;
+  background:var(--gold4);
+  margin:36px 0;
+  animation: fadeup 1s ease both 1.4s;
+}
+
+.hero-scroll {
+  font-size:9px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.15);
+  animation: fadeup 1s ease both 2s, blink 3s ease-in-out infinite 2.5s;
+}
+
+@keyframes fadeup {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes blink { 0%,100%{opacity:0.15} 50%{opacity:0.45} }
+
+/* ─── ТРЕК (шаги) ─── */
+.track {
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  margin-top:32px;
+}
+
+.track-step {
+  display:flex;
+  gap:20px;
+  position:relative;
+}
+
+.track-step:not(:last-child)::after {
+  content:'';
+  position:absolute;
+  left:19px; top:40px;
+  width:1px; bottom:-1px;
+  background:rgba(255,200,80,0.1);
+}
+
+.step-num {
+  width:40px; height:40px;
+  border-radius:50%;
+  border:1px solid rgba(255,200,80,0.25);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px;
+  color:var(--gold4);
+  flex-shrink:0;
+  background:rgba(255,200,80,0.03);
+}
+
+.step-num.active {
+  border-color:var(--gold4);
+  color:var(--gold);
+  background:rgba(255,200,80,0.08);
+  box-shadow:0 0 16px rgba(255,200,80,0.12);
+}
+
+.step-body {
+  padding:8px 0 36px;
+}
+
+.step-title {
+  font-size:11px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+  margin-bottom:8px;
+}
+
+.step-desc {
+  font-size:13px;
+  line-height:1.9;
+  color:var(--dim);
+}
+
+.step-tag {
+  display:inline-block;
+  font-size:8px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border:1px solid rgba(255,200,80,0.2);
+  color:var(--gold4);
+  border-radius:2px;
+  margin-top:10px;
+}
+
+/* ─── ЛОКАЦИИ ─── */
+.locations {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:28px;
+}
+
+.loc-card {
+  padding:16px 18px;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:6px;
+  background:rgba(255,255,255,0.02);
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+  transition:all 0.4s;
+}
+
+.loc-card.open {
+  border-color:rgba(100,160,255,0.2);
+  background:rgba(100,160,255,0.03);
+}
+
+.loc-card.locked {
+  opacity:0.45;
+  filter:grayscale(0.3);
+}
+
+.loc-icon {
+  font-size:20px;
+  width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+
+.loc-body { flex:1; }
+
+.loc-name {
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+  margin-bottom:4px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.badge {
+  font-size:7px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:2px;
+}
+
+.badge-open   { background:rgba(100,160,255,0.15); color:rgba(100,160,255,0.8); }
+.badge-locked { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.25); }
+.badge-secret { background:rgba(180,100,255,0.1);  color:rgba(180,100,255,0.6); }
+
+.loc-desc {
+  font-size:11px;
+  line-height:1.8;
+  color:rgba(255,255,255,0.3);
+}
+
+/* ─── ПЕРСОНАЖИ ─── */
+.chars {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:28px;
+}
+
+.char-card {
+  padding:16px 14px;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:6px;
+  background:rgba(0,0,0,0.2);
+  transition:all 0.4s;
+  cursor:default;
+}
+
+.char-card:hover {
+  border-color:rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.03);
+}
+
+.char-icon { font-size:22px; margin-bottom:8px; }
+.char-name {
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+  margin-bottom:4px;
+}
+.char-role {
+  font-size:8px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.2);
+  margin-bottom:8px;
+}
+.char-desc {
+  font-size:10px;
+  line-height:1.8;
+  color:rgba(255,255,255,0.3);
+}
+
+/* ─── РОЛИ ─── */
+.roles {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:28px;
+}
+
+.role-card {
+  padding:18px 20px;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:rgba(0,0,0,0.2);
+  transition:all 0.4s;
+}
+
+.role-card:hover { border-color:rgba(255,255,255,0.12); }
+
+.role-dot {
+  width:10px; height:10px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+
+.role-text { flex:1; }
+
+.role-name {
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+  margin-bottom:4px;
+}
+
+.role-desc {
+  font-size:11px;
+  line-height:1.7;
+  color:rgba(255,255,255,0.3);
+}
+
+.role-mystery {
+  font-size:8px;
+  letter-spacing:2px;
+  color:rgba(180,100,255,0.5);
+  text-transform:uppercase;
+  flex-shrink:0;
+}
+
+/* ─── ПРАВИЛА ─── */
+.rules {
+  margin-top:28px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.rule {
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+}
+
+.rule-sym {
+  font-size:14px;
+  color:var(--gold4);
+  flex-shrink:0;
+  width:20px;
+  margin-top:2px;
+}
+
+.rule-text {
+  font-size:13px;
+  line-height:1.9;
+  color:var(--dim);
+}
+
+/* ─── CTA ─── */
+#start {
+  text-align:center;
+  padding-top:80px;
+}
+
+.cta-label {
+  font-size:9px;
+  letter-spacing:5px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.15);
+  margin-bottom:32px;
+}
+
+.cta-btn {
+  display:inline-block;
+  padding:18px 60px;
+  border:1px solid rgba(255,200,80,0.35);
+  color:rgba(255,200,80,0.8);
+  font-family:Georgia, serif;
+  font-size:10px;
+  letter-spacing:7px;
+  text-transform:uppercase;
+  text-decoration:none;
+  cursor:pointer;
+  background:transparent;
+  border-radius:2px;
+  transition:all 0.5s;
+  position:relative;
+}
+
+.cta-btn:hover {
+  border-color:rgba(255,200,80,0.9);
+  color:var(--gold);
+  background:rgba(255,200,80,0.04);
+  box-shadow:0 0 40px rgba(255,200,80,0.08);
+}
+
+.cta-note {
+  margin-top:20px;
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.12);
+}
+
+/* ─── РАЗДЕЛИТЕЛЬ ─── */
+.sep {
+  height:1px;
+  background:rgba(255,255,255,0.05);
+  margin-top:64px;
+}
+
+/* ─── АНИМАЦИЯ ПОЯВЛЕНИЯ ПРИ СКРОЛЛЕ ─── */
+.reveal {
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible {
+  opacity:1;
+  transform:translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<main>
+
+  <!-- ══ HERO ══ -->
+  <section id="hero">
+    <div class="hero-eyebrow">Macis Academy · Входная группа</div>
+    <h1>Ты на<br>пороге</h1>
+    <p class="hero-sub">
+      Это не курс. Не подписка. Не марафон.<br>
+      Это живое пространство — со своими локациями,<br>
+      персонажами, частотами и правилами.<br><br>
+      <em>Прямо сейчас оно считывает тебя.</em>
+    </p>
+    <div class="hero-divider"></div>
+    <div class="hero-scroll">↓ &nbsp; листай</div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ ЧТО ПРОИСХОДИТ ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 01 · Что происходит</div>
+    <h2>Входная группа</h2>
+    <p>
+      Перед тем как войти в основное пространство,
+      каждый проходит <em>трек первого контакта</em>.
+      Это неделя взаимодействия с ИИ через Telegram.
+    </p>
+    <p>
+      ИИ не тестирует тебя. Он <em>разговаривает</em> с тобой.
+      Читает паттерны. Замечает закономерности.
+      Собирает твою картину — не анкетой, а живым диалогом.
+    </p>
+    <p>
+      В конце ты <strong>«всплываешь»</strong> — и узнаёшь кто ты
+      в этом пространстве, что тебе открывается и куда двигаться дальше.
+    </p>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ ТРЕК ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 02 · Маршрут</div>
+    <h2>Четыре этапа</h2>
+
+    <div class="track">
+
+      <div class="track-step">
+        <div class="step-num active">I</div>
+        <div class="step-body">
+          <div class="step-title">Встреча · Telegram</div>
+          <div class="step-desc">
+            Ты начинаешь разговор с ИИ-проводником в Telegram.
+            Никаких тестов. Просто диалог — о том что важно тебе прямо сейчас.
+            Этот этап занимает около недели.
+          </div>
+          <span class="step-tag">доступно сразу</span>
+        </div>
+      </div>
+
+      <div class="track-step">
+        <div class="step-num">II</div>
+        <div class="step-body">
+          <div class="step-title">Анализ · Твоя картина</div>
+          <div class="step-desc">
+            На основе разговора формируется твой профиль:
+            предрасположенности, паттерны, точки роста.
+            Это происходит в фоне — ты не замечаешь процесс, только результат.
+          </div>
+          <span class="step-tag">в процессе трека</span>
+        </div>
+      </div>
+
+      <div class="track-step">
+        <div class="step-num">III</div>
+        <div class="step-body">
+          <div class="step-title">Роль · Резонанс</div>
+          <div class="step-desc">
+            Ты узнаёшь кто ты в этом пространстве.
+            Не потому что так решил алгоритм —
+            а потому что это совпало с тем, что ты сам показал в диалоге.
+          </div>
+          <span class="step-tag">конец первой недели</span>
+        </div>
+      </div>
+
+      <div class="track-step">
+        <div class="step-num">IV</div>
+        <div class="step-body">
+          <div class="step-title">Вход · Основное пространство</div>
+          <div class="step-desc">
+            Открываются локации, персонажи, функции.
+            Ты получаешь доступ к своей ветви развития —
+            которая создавалась под тебя, пока ты шёл.
+          </div>
+          <span class="step-tag">индивидуально</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ ЛОКАЦИИ ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 03 · Мир</div>
+    <h2>Локации</h2>
+    <p>Пространство состоит из мест. Каждое открывается в своё время.</p>
+
+    <div class="locations">
+
+      <div class="loc-card open">
+        <div class="loc-icon">○</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            Вход · Пустота
+            <span class="badge badge-open">открыто</span>
+          </div>
+          <div class="loc-desc">Точка начала. Здесь ты принимаешь решение войти.</div>
+        </div>
+      </div>
+
+      <div class="loc-card open">
+        <div class="loc-icon">❋</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            Площадь Эйры
+            <span class="badge badge-open">открыто</span>
+          </div>
+          <div class="loc-desc">Центральный хаб. Цветок жизни. Здесь обитает Эрат — хранитель.</div>
+        </div>
+      </div>
+
+      <div class="loc-card locked">
+        <div class="loc-icon">◈</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            Камера Резонанса
+            <span class="badge badge-locked">закрыто</span>
+          </div>
+          <div class="loc-desc">Пасьянс Медичи. Намерение превращается в действие через карты.</div>
+        </div>
+      </div>
+
+      <div class="loc-card locked">
+        <div class="loc-icon">◉</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            Нео-Эребус
+            <span class="badge badge-locked">закрыто</span>
+          </div>
+          <div class="loc-desc">Тёмный зал. Наполняется светом через реальные моменты.</div>
+        </div>
+      </div>
+
+      <div class="loc-card locked">
+        <div class="loc-icon">♪</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            Архив Частот
+            <span class="badge badge-locked">закрыто</span>
+          </div>
+          <div class="loc-desc">432 Гц и выше. Звук как инструмент трансформации.</div>
+        </div>
+      </div>
+
+      <div class="loc-card locked">
+        <div class="loc-icon">?</div>
+        <div class="loc-body">
+          <div class="loc-name">
+            ???
+            <span class="badge badge-secret">не раскрыто</span>
+          </div>
+          <div class="loc-desc">Появляется для тех кто прошёл дальше.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ ПЕРСОНАЖИ ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 04 · Персонажи</div>
+    <h2>Кого встретишь</h2>
+    <p>Каждый персонаж — отдельная точка зрения на мир. У каждого своя частота.</p>
+
+    <div class="chars">
+
+      <div class="char-card">
+        <div class="char-icon">𓂀</div>
+        <div class="char-name">Эрат</div>
+        <div class="char-role">Хранитель Площади</div>
+        <div class="char-desc">Говорит медленно. Образами. Встречает каждого кто приходит.</div>
+      </div>
+
+      <div class="char-card">
+        <div class="char-icon">♪</div>
+        <div class="char-name">Лира</div>
+        <div class="char-role">Певица Звука</div>
+        <div class="char-desc">Видит музыку в каждой вещи. Голос меняется с частотами.</div>
+      </div>
+
+      <div class="char-card">
+        <div class="char-icon">◉</div>
+        <div class="char-name">Барс</div>
+        <div class="char-role">Страж Темноты</div>
+        <div class="char-desc">Был природой. Каждое слово весит. Говорит редко.</div>
+      </div>
+
+      <div class="char-card">
+        <div class="char-icon">⊕</div>
+        <div class="char-name">Сенсей</div>
+        <div class="char-role">Мастер Баланса</div>
+        <div class="char-desc">Знает точное место для каждого момента. Без лишнего.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ РОЛИ ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 05 · Роли</div>
+    <h2>Кем ты можешь стать</h2>
+    <p>
+      Роль — не ярлык. Это <em>резонанс</em>.
+      Нет плохих и хороших. Есть — твоё и не твоё.
+      Роль открывается в конце входного трека.
+    </p>
+
+    <div class="roles">
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(255,200,80,0.8);box-shadow:0 0 8px rgba(255,200,80,0.4)"></div>
+        <div class="role-text">
+          <div class="role-name">Архитектор</div>
+          <div class="role-desc">Видит структуру. Соединяет то что не соединяется. Строит миры.</div>
+        </div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(100,160,255,0.8);box-shadow:0 0 8px rgba(100,160,255,0.4)"></div>
+        <div class="role-text">
+          <div class="role-name">Картограф</div>
+          <div class="role-desc">Исследует. Находит пути туда где ещё нет карт. Первый везде.</div>
+        </div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(80,255,120,0.8);box-shadow:0 0 8px rgba(80,255,120,0.4)"></div>
+        <div class="role-text">
+          <div class="role-name">Куратор</div>
+          <div class="role-desc">Держит пространство. Знает людей. Соединяет нужных в нужный момент.</div>
+        </div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(255,120,120,0.8);box-shadow:0 0 8px rgba(255,120,120,0.4)"></div>
+        <div class="role-text">
+          <div class="role-name">Резонатор</div>
+          <div class="role-desc">Чувствует частоты. Усиливает других. Создаёт атмосферу из ничего.</div>
+        </div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(180,100,255,0.8);box-shadow:0 0 8px rgba(180,100,255,0.4)"></div>
+        <div class="role-text">
+          <div class="role-name">Хранитель</div>
+          <div class="role-desc">Помнит. Сохраняет. Передаёт дальше то что важно не потерять.</div>
+        </div>
+      </div>
+
+      <div class="role-card">
+        <div class="role-dot" style="background:rgba(255,200,80,0.2);border:1px solid rgba(255,200,80,0.3)"></div>
+        <div class="role-text">
+          <div class="role-name">???</div>
+          <div class="role-desc">Некоторые роли появляются только когда для них есть человек.</div>
+        </div>
+        <div class="role-mystery">редкая</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ ПРАВИЛА ══ -->
+  <section class="reveal">
+    <div class="sec-tag">§ 06 · Как это работает</div>
+    <h2>Несколько вещей</h2>
+
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-sym">·</div>
+        <div class="rule-text">ИИ не оценивает — он <em>считывает</em>. Нет правильных ответов, нет ошибок. Говори как есть.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-sym">·</div>
+        <div class="rule-text">Трек занимает около недели. Не нужно торопиться — нужно <em>присутствовать</em>.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-sym">·</div>
+        <div class="rule-text">Твой путь создаётся персонально. Но ощущение будет — как будто всё это уже <em>ждало именно тебя</em>.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-sym">·</div>
+        <div class="rule-text">Каждое действие внутри пространства что-то <em>открывает</em>. Бездействие тоже.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-sym">·</div>
+        <div class="rule-text">Это не про то чтобы стать кем-то другим. Это про то чтобы <em>вспомнить кто ты уже есть</em>.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- ══ CTA ══ -->
+  <section id="start" class="reveal">
+    <div class="cta-label">Если готов</div>
+    <a class="cta-btn" href="https://t.me/YOUR_BOT" target="_blank">Запускаемся</a>
+    <div class="cta-note">через Telegram · бесплатно · займёт около недели</div>
+  </section>
+
+</main>
+
+<script>
+// Звёздный фон
+(function(){
+  const div = document.getElementById('stars');
+  for(let i = 0; i < 80; i++){
+    const s = document.createElement('div');
+    const x = Math.random()*100, y = Math.random()*100;
+    const size = Math.random()*1.5 + 0.3;
+    const delay = Math.random()*6;
+    const dur   = Math.random()*4 + 3;
+    s.style.cssText = `
+      position:fixed;
+      left:${x}vw; top:${y}vh;
+      width:${size}px; height:${size}px;
+      border-radius:50%;
+      background:rgba(200,180,255,0.6);
+      animation:star-blink ${dur}s ease-in-out ${delay}s infinite;
+      pointer-events:none;
+    `;
+    div.appendChild(s);
+  }
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes star-blink {
+      0%,100%{opacity:0.1;transform:scale(1)}
+      50%{opacity:0.7;transform:scale(1.3)}
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// Анимация появления при скролле
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
