@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shader:glyphs — test</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000;
+  width: 100vw; height: 100vh;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  gap: 20px; overflow: hidden;
+}
+#stage { display: flex; gap: 40px; align-items: center; }
+.glyph { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+canvas {
+  width: 200px; height: 200px; display: block;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.meta {
+  font: 9px/1.5 'Courier New', monospace;
+  color: rgba(255,255,255,.2);
+  text-align: center;
+  letter-spacing: .12em;
+}
+#caption {
+  font: 10px/1 'Courier New', monospace;
+  color: rgba(255,255,255,.12);
+  letter-spacing: .2em;
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+  <div class="glyph">
+    <canvas id="cA" width="512" height="512"></canvas>
+    <div class="meta">А · U+0410<br>glyph_001.glsl</div>
+  </div>
+
+  <div class="glyph">
+    <canvas id="cB" width="512" height="512"></canvas>
+    <div class="meta">Б · U+0411<br>glyph_002.glsl</div>
+  </div>
+
+  <div class="glyph">
+    <canvas id="cV" width="512" height="512"></canvas>
+    <div class="meta">В · U+0412<br>glyph_003.glsl</div>
+  </div>
+
+</div>
+
+<div id="caption">// shader-based glyph pack · sdf rendering · no fonts</div>
+
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   vertex shader (shared by all glyphs)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const VS = `
+attribute vec2 a;
+void main() { gl_Position = vec4(a, 0.0, 1.0); }
+`;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   common SDF library (prepended to each fragment shader)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const LIB = `
+precision highp float;
+uniform float T;   // time (seconds)
+uniform vec2  R;   // canvas resolution
+
+// ── distance to line segment ──────────────────────────────────
+float seg(vec2 p, vec2 a, vec2 b) {
+  vec2 pa = p - a, ba = b - a;
+  return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
+}
+
+// ── right-facing semicircle arc ───────────────────────────────
+// top endpoint : (c.x, c.y + r)
+// bottom endpoint : (c.x, c.y - r)
+// rightmost point : (c.x + r, c.y)
+float rarc(vec2 p, vec2 c, float r) {
+  float yc = clamp(p.y, c.y - r, c.y + r);
+  float dy = yc - c.y;
+  float rx = sqrt(max(r * r - dy * dy, 0.0));
+  return length(p - vec2(c.x + rx, yc));
+}
+
+// ── multi-layer neon glow ─────────────────────────────────────
+vec3 glo(float d, vec3 col) {
+  d = abs(d);
+  float a = exp(-d * 22.0) * 0.55
+          + exp(-d * 75.0) * 0.50
+          + exp(-d * 260.0) * 0.85;
+  vec3 white_core = vec3(1.0) * exp(-d * 450.0) * 0.35;
+  return col * a + white_core;
+}
+`;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   glyph А
+   strokes: left diagonal · right diagonal · crossbar
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const FA = LIB + `
+void main() {
+  vec2 uv = (gl_FragCoord.xy / R) * 2.0 - 1.0;
+  vec2 p  = uv;
+
+  float d = 1e9;
+  d = min(d, seg(p, vec2(-0.36, -0.65), vec2( 0.00,  0.65)));
+  d = min(d, seg(p, vec2( 0.00,  0.65), vec2( 0.36, -0.65)));
+  d = min(d, seg(p, vec2(-0.19, -0.05), vec2( 0.19, -0.05)));
+  d -= 0.044;
+
+  vec3 col = glo(d, vec3(0.75, 0.28, 1.00));
+  col *= 0.85 + 0.15 * sin(T * 1.7);
+  col *= 0.98 + 0.02 * sin(uv.y * 160.0);
+  col *= 1.0 - dot(uv, uv) * 0.20;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   glyph Б
+   strokes: left vert · top bar · shelf · right arc · bottom close
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const FB = LIB + `
+void main() {
+  vec2 uv = (gl_FragCoord.xy / R) * 2.0 - 1.0;
+  vec2 p  = uv;
+
+  float d = 1e9;
+  d = min(d, seg( p, vec2(-0.35, -0.65), vec2(-0.35,  0.65)));
+  d = min(d, seg( p, vec2(-0.35,  0.65), vec2( 0.32,  0.65)));
+  d = min(d, seg( p, vec2(-0.35,  0.06), vec2( 0.05,  0.06)));
+  d = min(d, rarc(p, vec2( 0.05, -0.30), 0.36));
+  d = min(d, seg( p, vec2( 0.05, -0.66), vec2(-0.35, -0.65)));
+  d -= 0.044;
+
+  vec3 col = glo(d, vec3(0.18, 0.85, 1.00));
+  col *= 0.85 + 0.15 * sin(T * 1.7 + 2.094);
+  col *= 0.98 + 0.02 * sin(uv.y * 160.0);
+  col *= 1.0 - dot(uv, uv) * 0.20;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   glyph В
+   strokes: left vert · top/mid/bot bars · upper arc · lower arc
+   arcs connect exactly at (0.12, ±0.65) and (0.12, 0.0)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const FV = LIB + `
+void main() {
+  vec2 uv = (gl_FragCoord.xy / R) * 2.0 - 1.0;
+  vec2 p  = uv;
+
+  float d = 1e9;
+  d = min(d, seg( p, vec2(-0.35, -0.65), vec2(-0.35,  0.65)));
+  d = min(d, seg( p, vec2(-0.35,  0.65), vec2( 0.12,  0.65)));
+  d = min(d, seg( p, vec2(-0.35,  0.00), vec2( 0.12,  0.00)));
+  d = min(d, seg( p, vec2(-0.35, -0.65), vec2( 0.12, -0.65)));
+  d = min(d, rarc(p, vec2( 0.12,  0.325), 0.325));
+  d = min(d, rarc(p, vec2( 0.12, -0.325), 0.325));
+  d -= 0.044;
+
+  vec3 col = glo(d, vec3(1.00, 0.62, 0.10));
+  col *= 0.85 + 0.15 * sin(T * 1.7 + 4.189);
+  col *= 0.98 + 0.02 * sin(uv.y * 160.0);
+  col *= 1.0 - dot(uv, uv) * 0.20;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   WebGL boilerplate
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function mkShader(gl, type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+    console.error('[shader error]', gl.getShaderInfoLog(s));
+  return s;
+}
+
+function mkGL(id, fs) {
+  const canvas = document.getElementById(id);
+  const gl = canvas.getContext('webgl');
+  if (!gl) { console.error('WebGL not supported'); return null; }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, mkShader(gl, gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, mkShader(gl, gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+    console.error('[program error]', gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([-1,-1,  1,-1,  -1,1,  1,1]),
+    gl.STATIC_DRAW);
+
+  const aLoc = gl.getAttribLocation(prog, 'a');
+  gl.enableVertexAttribArray(aLoc);
+  gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+
+  gl.uniform2f(gl.getUniformLocation(prog, 'R'), canvas.width, canvas.height);
+  return { gl, tLoc: gl.getUniformLocation(prog, 'T') };
+}
+
+const glyphs = [
+  mkGL('cA', FA),
+  mkGL('cB', FB),
+  mkGL('cV', FV),
+].filter(Boolean);
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   render loop
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(function loop(ms) {
+  const t = ms * 0.001;
+  for (const { gl, tLoc } of glyphs) {
+    gl.uniform1f(tLoc, t);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+  requestAnimationFrame(loop);
+})(0);
+</script>
+</body>
+</html>
